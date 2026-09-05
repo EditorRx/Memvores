@@ -177,18 +177,34 @@ function renderFooter(settings) {
   setHref('#footer-youtube', links.youtube || '#');
   setHref('#footer-collab', links.collab || '#');
     // Support → MV Admin link
-  setHref('#footer-support', links.support || '#');
+    // Both header and footer Support buttons → open Support modal
+  const supportLinks = [
+    document.querySelector('header a[href="#support"]'),
+    document.querySelector('#footer-support')
+  ].filter(Boolean);
 
-  // Donate → will open modal (no href change here)
-  const donateLink = document.querySelector('a[href="#donate"]');
-  if (donateLink) {
-    donateLink.addEventListener('click', (e) => {
+  supportLinks.forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('support-modal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  });
+
+  // Set MV Admin link inside Support modal
+  const mvAdminBtn = document.getElementById('support-mv-admin');
+  if (mvAdminBtn) {
+    mvAdminBtn.href = links.support || '#';
+  }
+
+    // Both header and footer Donate buttons → open Donate modal
+  $$('a[href="#donate"]').forEach(el => {
+    el.addEventListener('click', (e) => {
       e.preventDefault();
       const modal = document.getElementById('donate-modal');
       if (modal) modal.classList.remove('hidden');
     });
-  }
-
+  });
   // Logo & tagline
   setText('#logo-text', settings?.brand?.name || 'MEMEVORES');
   setText('#footer-logo', settings?.brand?.name || 'MEMEVORES');
@@ -232,6 +248,16 @@ function renderDonateModal(settings) {
 
   $('.modal-backdrop')?.addEventListener('click', () => {
     modal.classList.add('hidden');
+  });
+    // Close Support modal
+  $('#support-close')?.addEventListener('click', () => {
+    const modal = document.getElementById('support-modal');
+    if (modal) modal.classList.add('hidden');
+  });
+
+  document.querySelector('#support-modal .modal-backdrop')?.addEventListener('click', () => {
+    const modal = document.getElementById('support-modal');
+    if (modal) modal.classList.add('hidden');
   });
 }
 
