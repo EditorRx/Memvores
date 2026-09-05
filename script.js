@@ -176,7 +176,18 @@ function renderFooter(settings) {
   setHref('#footer-telegram', links.telegram || '#');
   setHref('#footer-youtube', links.youtube || '#');
   setHref('#footer-collab', links.collab || '#');
+    // Support → MV Admin link
   setHref('#footer-support', links.support || '#');
+
+  // Donate → will open modal (no href change here)
+  const donateLink = document.querySelector('a[href="#donate"]');
+  if (donateLink) {
+    donateLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('donate-modal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  }
 
   // Logo & tagline
   setText('#logo-text', settings?.brand?.name || 'MEMEVORES');
@@ -206,41 +217,13 @@ function renderFooter(settings) {
 // ===== Render Donate Modal =====
 function renderDonateModal(settings) {
   const donate = settings?.donation || {};
-  const modal = $('#donate-modal');
-  const openLinks = ['a[href="#donate"]', '#footer-support']; // simplified; real open via footer "Donate"
+  const modal = document.getElementById('donate-modal');
+  if (!modal) return;
 
-  setText('#donate-title', donate.title || 'Support Memevores');
-  setText('#donate-description', donate.description || '');
-
-  const qrBox = $('#donate-qr');
-  const qrImg = $('#donate-qr-img');
-  const directBox = $('#donate-direct');
-  const directLink = $('#donate-direct-link');
   const supportLink = $('#donate-support-link');
-
-  if (donate.qrEnabled && donate.qrImage) {
-    qrBox.classList.remove('hidden');
-    qrImg.src = donate.qrImage;
-  } else {
-    qrBox.classList.add('hidden');
+  if (supportLink) {
+    supportLink.href = donate.supportLink || '#';
   }
-
-  if (donate.directEnabled && donate.directPayLink) {
-    directBox.classList.remove('hidden');
-    directLink.href = donate.directPayLink;
-  } else {
-    directBox.classList.add('hidden');
-  }
-
-  supportLink.href = donate.supportLink || '#';
-
-  // Open modal when clicking any "Donate" link
-  $$('#footer-col a[href="#donate"], a[href="#donate"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      modal.classList.remove('hidden');
-    });
-  });
 
   // Close modal
   $('#donate-close')?.addEventListener('click', () => {
