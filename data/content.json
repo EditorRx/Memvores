@@ -1,0 +1,61 @@
+{
+  "hero": {
+    "title": "MEMEVORES",
+    "subtitle": "Clips, sounds, templates, and chaos.",
+    "description": "Fresh meme clips, sounds, effects, templates, overlays, tutorials, and creator updates.",
+    "buttons": [
+      {
+        "label": "Join Telegram",
+        "link": "https://t.me/Memevores",
+        "style": "primary"
+      },
+      {
+        "label": "Collab",
+        "link": "https://editorrx.github.io/Collabvores/",
+        "style": "secondary"
+      }
+    ]
+  },
+  "features": [
+    {
+      "icon": "🎬",
+      "title": "Fresh Clips",
+      "description": "New meme clips and templates, updated regularly."
+    },
+    {
+      "icon": "🔊",
+      "title": "Sounds & Effects",
+      "description": "Viral sounds, effects, and audio snippets for edits."
+    },
+    {
+      "icon": "🧩",
+      "title": "Templates & Overlays",
+      "description": "Ready-to-use templates, overlays, and edit assets."
+    },
+    {
+      "icon": "📚",
+      "title": "Tutorials & Updates",
+      "description": "Creator tips, tutorials, and channel updates."
+    }
+  ],
+  "sections": [
+    {
+      "id": "about",
+      "title": "About Memevores",
+      "content": "MEMEVORES is a creator hub for meme clips, sounds, templates, and edit assets. Everything is organized to help you find and use content quickly in your own videos and edits."
+    },
+    {
+      "id": "how-it-works",
+      "title": "How it works",
+      "content": "New posts from the Memevores Telegram channel are automatically synced to this site. Each post becomes a card with media and a short description so you can browse and grab what you need."
+    }
+  ],
+  "cta": {
+    "title": "Ready to dive in?",
+    "description": "Join the Telegram channel to get fresh clips, sounds, templates, and chaos straight to your feed.",
+    "button": {
+      "label": "Join Telegram",
+      "link": "https://t.me/Memevores"
+    }
+  }
+}
