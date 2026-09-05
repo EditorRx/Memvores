@@ -1,0 +1,54 @@
+{
+  "brand": {
+    "name": "MEMEVORES",
+    "tagline": "Clips, sounds, templates, and chaos.",
+    "description": "Fresh meme clips, sounds, effects, templates, overlays, tutorials, and creator updates."
+  },
+  "links": {
+    "telegram": "https://t.me/Memevores",
+    "support": "https://t.me/+NZcBNeBvClFlMTE1",
+    "youtube": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-",
+    "collab": "https://editorrx.github.io/Collabvores/"
+  },
+  "socials": [
+    {
+      "name": "YouTube",
+      "icon": "▶",
+      "url": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-",
+      "enabled": true
+    },
+    {
+      "name": "Instagram",
+      "icon": "◎",
+      "url": "",
+      "enabled": false
+    },
+    {
+      "name": "X",
+      "icon": "𝕏",
+      "url": "",
+      "enabled": false
+    },
+    {
+      "name": "Discord",
+      "icon": "◈",
+      "url": "",
+      "enabled": false
+    }
+  ],
+  "donation": {
+    "enabled": true,
+    "title": "Support Memevores",
+    "description": "Help fuel more clips, sounds, templates, and chaos.",
+    "qrEnabled": false,
+    "qrImage": "",
+    "directEnabled": false,
+    "directPayLink": "",
+    "supportLink": "https://t.me/+NZcBNeBvClFlMTE1"
+  },
+  "promotionDefaults": {
+    "title": "Subscribe to Memevores on YouTube",
+    "buttonText": "Visit Channel",
+    "link": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-"
+  }
+}
