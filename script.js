@@ -184,7 +184,7 @@ function renderFooter(settings) {
       a.href = s.enabled ? (s.url || '#') : '#';
       a.target = s.enabled ? '_blank' : undefined;
       a.rel = 'noopener';
-      a.textContent = `${s.icon || ''} ${s.name || ''}`;
+      a.innerHTML = `<i class="${s.icon || ''}"></i> <span>${s.name || ''}</span>`;
       socialContainer.appendChild(a);
     });
   }
