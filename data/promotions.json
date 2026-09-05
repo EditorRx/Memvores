@@ -1,0 +1,13 @@
+{
+  "promotions": [
+    {
+      "id": "youtube-subscribe",
+      "enabled": true,
+      "title": "Subscribe to Memevores on YouTube",
+      "description": "Get meme clips, sounds, templates, and creator updates in video form.",
+      "buttonText": "Visit Channel",
+      "link": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-",
+      "style": "youtube"
+    }
+  ]
+}
