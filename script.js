@@ -18,11 +18,6 @@ function setHref(id, href) {
   if (el) el.href = href;
 }
 
-function setHtml(id, html) {
-  const el = $(id);
-  if (el) el.innerHTML = html;
-}
-
 // ===== Render Promotion Banner =====
 function renderPromotionBanner(promotions) {
   const banner = $('#promotion-banner');
@@ -44,7 +39,7 @@ function renderPromotionBanner(promotions) {
 
   const btn = document.createElement('a');
   btn.className = 'promo-btn';
-  btn.href = active.link;
+  btn.href = active.link || '#';
   btn.target = '_blank';
   btn.rel = 'noopener';
   btn.textContent = active.buttonText || 'Learn more';
@@ -74,7 +69,6 @@ function renderHero(content, settings) {
     btns.appendChild(a);
   });
 
-  // Header Telegram button
   const headerBtn = $('#telegram-header-btn');
   if (headerBtn) {
     headerBtn.href = settings?.links?.telegram || '#';
@@ -176,36 +170,11 @@ function renderFooter(settings) {
   setHref('#footer-telegram', links.telegram || '#');
   setHref('#footer-youtube', links.youtube || '#');
   setHref('#footer-collab', links.collab || '#');
-    // Support → MV Admin link
-  
-  // Both header and footer Support buttons → open Support modal
-  $$('a[href="#support"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = document.getElementById('support-modal');
-      if (modal) modal.classList.remove('hidden');
-    });
-  });
 
-  // Set MV Admin link inside Support modal
-  const mvAdminBtn = document.getElementById('support-mv-admin');
-  if (mvAdminBtn) {
-    mvAdminBtn.href = links.support || '#';
-  }
-    // Both header and footer Donate buttons → open Donate modal
-  $$('a[href="#donate"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = document.getElementById('donate-modal');
-      if (modal) modal.classList.remove('hidden');
-    });
-  });
-  // Logo & tagline
   setText('#logo-text', settings?.brand?.name || 'MEMEVORES');
   setText('#footer-logo', settings?.brand?.name || 'MEMEVORES');
   setText('#footer-tagline', settings?.brand?.tagline || '');
 
-  // Social buttons
   const socialContainer = $('#social-buttons');
   if (socialContainer) {
     socialContainer.innerHTML = '';
@@ -220,39 +189,47 @@ function renderFooter(settings) {
     });
   }
 
-  // Copyright year
   const yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // Donate buttons (header + footer) → open Donate modal
+  $$('a[href="#donate"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('donate-modal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  });
+
+  // Support buttons (header + footer) → open Support modal
+  $$('a[href="#support"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('support-modal');
+      if (modal) modal.classList.remove('hidden');
+    });
+  });
+
+  // Set MV Admin link inside Support modal
+  const mvAdminBtn = document.getElementById('support-mv-admin');
+  if (mvAdminBtn) {
+    mvAdminBtn.href = links.support || '#';
+  }
 }
 
-// ===== Render Donate Modal =====
-function renderDonateModal(settings) {
-  const donate = settings?.donation || {};
-  const modal = document.getElementById('donate-modal');
+// ===== Modals: close handlers =====
+function setupModalClose(modalId, closeBtnId, backdropSelector) {
+  const modal = document.getElementById(modalId);
   if (!modal) return;
 
-  const supportLink = $('#donate-support-link');
-  if (supportLink) {
-    supportLink.href = donate.supportLink || '#';
-  }
-
-  // Close modal
-  $('#donate-close')?.addEventListener('click', () => {
+  const closeBtn = document.getElementById(closeBtnId);
+  closeBtn?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
 
-  $('.modal-backdrop')?.addEventListener('click', () => {
+  const backdrop = modal.querySelector(backdropSelector);
+  backdrop?.addEventListener('click', () => {
     modal.classList.add('hidden');
-  });
-    // Close Support modal
-  $('#support-close')?.addEventListener('click', () => {
-    const modal = document.getElementById('support-modal');
-    if (modal) modal.classList.add('hidden');
-  });
-
-  document.querySelector('#support-modal .modal-backdrop')?.addEventListener('click', () => {
-    const modal = document.getElementById('support-modal');
-    if (modal) modal.classList.add('hidden');
   });
 }
 
@@ -272,7 +249,10 @@ function renderDonateModal(settings) {
     renderYouTubePromo(promotions);
     renderCTA(content);
     renderFooter(settings);
-    renderDonateModal(settings);
+
+    // Setup close handlers for both modals
+    setupModalClose('donate-modal', 'donate-close', '.modal-backdrop');
+    setupModalClose('support-modal', 'support-close', '.modal-backdrop');
   } catch (err) {
     console.error('Error loading MEMEVORES data:', err);
     document.body.insertAdjacentHTML(
