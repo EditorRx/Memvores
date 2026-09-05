@@ -11,30 +11,30 @@
     "collab": "https://editorrx.github.io/Collabvores/"
   },
   "socials": [
-    {
-      "name": "YouTube",
-      "icon": "▶",
-      "url": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-",
-      "enabled": true
-    },
-    {
-      "name": "Instagram",
-      "icon": "◎",
-      "url": "",
-      "enabled": false
-    },
-    {
-      "name": "",
-      "icon": "𝕏",
-      "url": "",
-      "enabled": false
-    },
-    {
-      "name": "Discord",
-      "icon": "◈",
-      "url": "",
-      "enabled": false
-    }
+  {
+    "name": "YouTube",
+    "icon": "fa-brands fa-youtube",
+    "url": "https://youtube.com/@memevores?si=9aOpDZ7kPoj2Svq-",
+    "enabled": true
+  },
+  {
+    "name": "Instagram",
+    "icon": "fa-brands fa-instagram",
+    "url": "",
+    "enabled": false
+  },
+  {
+    "name": "",
+    "icon": "fa-brands fa-x-twitter",
+    "url": "",
+    "enabled": false
+  },
+  {
+    "name": "Discord",
+    "icon": "fa-brands fa-discord",
+    "url": "",
+    "enabled": false
+  }
   ],
   "donation": {
     "enabled": true,
