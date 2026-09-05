@@ -177,13 +177,9 @@ function renderFooter(settings) {
   setHref('#footer-youtube', links.youtube || '#');
   setHref('#footer-collab', links.collab || '#');
     // Support → MV Admin link
-    // Both header and footer Support buttons → open Support modal
-  const supportLinks = [
-    document.querySelector('header a[href="#support"]'),
-    document.querySelector('#footer-support')
-  ].filter(Boolean);
-
-  supportLinks.forEach(el => {
+  
+  // Both header and footer Support buttons → open Support modal
+  $$('a[href="#support"]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const modal = document.getElementById('support-modal');
@@ -196,7 +192,6 @@ function renderFooter(settings) {
   if (mvAdminBtn) {
     mvAdminBtn.href = links.support || '#';
   }
-
     // Both header and footer Donate buttons → open Donate modal
   $$('a[href="#donate"]').forEach(el => {
     el.addEventListener('click', (e) => {
