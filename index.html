@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEMEVORES</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Promotion Banner -->
+  <div id="promotion-banner" class="promotion-banner hidden"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo" id="logo-text">MEMEVORES</div>
+      <nav class="site-nav">
+        <a href="#about">About</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#support">Support</a>
+        <a href="#donate">Donate</a>
+      </nav>
+      <a id="telegram-header-btn" class="btn btn-sm" href="#" target="_blank" rel="noopener">
+        Join Telegram
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <h1 id="hero-title">MEMEVORES</h1>
+      <p id="hero-subtitle" class="hero-subtitle">Clips, sounds, templates, and chaos.</p>
+      <p id="hero-description" class="hero-description"></p>
+      <div id="hero-buttons" class="hero-buttons"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="container">
+      <div id="features-grid" class="features-grid"></div>
+    </div>
+  </section>
+
+  <!-- Content Sections -->
+  <section id="about" class="content-section">
+    <div class="container">
+      <h2 id="about-title">About Memevores</h2>
+      <p id="about-text"></p>
+    </div>
+  </section>
+
+  <section id="how-it-works" class="content-section alt-bg">
+    <div class="container">
+      <h2 id="how-title">How it works</h2>
+      <p id="how-text"></p>
+    </div>
+  </section>
+
+  <!-- YouTube Promotion Card -->
+  <section id="youtube-promo" class="promo-section">
+    <div class="container">
+      <div id="youtube-promo-card" class="promo-card"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="cta-section">
+    <div class="container cta-inner">
+      <h2 id="cta-title"></h2>
+      <p id="cta-description"></p>
+      <a id="cta-button" class="btn btn-primary btn-lg" href="#" target="_blank" rel="noopener"></a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="logo" id="footer-logo">MEMEVORES</div>
+        <p id="footer-tagline">Clips, sounds, templates, and chaos.</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Links</h4>
+          <ul>
+            <li><a id="footer-telegram" href="#" target="_blank" rel="noopener">Telegram</a></li>
+            <li><a id="footer-youtube" href="#" target="_blank" rel="noopener">YouTube</a></li>
+            <li><a id="footer-collab" href="#" target="_blank" rel="noopener">Collab</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Social</h4>
+          <div id="social-buttons" class="social-buttons"></div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li><a id="footer-support" href="#" target="_blank" rel="noopener">Contact Admin</a></li>
+            <li><a href="#donate">Donate</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container copyright">
+      <p>&copy; <span id="year"></span> MEMEVORES. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Donate Modal -->
+  <div id="donate-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <button id="donate-close" class="modal-close" aria-label="Close">&times;</button>
+      <h3 id="donate-title">Support Memevores</h3>
+      <p id="donate-description"></p>
+
+      <div id="donate-qr" class="donate-qr hidden">
+        <img id="donate-qr-img" src="" alt="Support QR code" />
+        <p class="donate-qr-note">Scan to support</p>
+      </div>
+
+      <div id="donate-direct" class="donate-direct hidden">
+        <a id="donate-direct-link" class="btn btn-primary" href="#" target="_blank" rel="noopener">
+          Pay Now
+        </a>
+      </div>
+
+      <div class="donate-actions">
+        <a id="donate-support-link" class="btn btn-secondary" href="#" target="_blank" rel="noopener">
+          Contact for Support
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
