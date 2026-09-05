@@ -565,3 +565,10 @@ a {
 .hidden {
   display: none !important;
 }
+
+#support-description {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-bottom: 14px;
+}
