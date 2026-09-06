@@ -233,13 +233,72 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
   });
 }
 
+// ===== Render Feed =====
+function renderFeed(posts) {
+  const grid = $('#feed-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  (posts || []).forEach(post => {
+    const card = document.createElement('div');
+    card.className = 'feed-card';
+
+    const hasMedia = !!post.file;
+    if (!hasMedia) {
+      card.classList.add('text-only');
+    }
+
+    // Media container
+    const mediaDiv = document.createElement('div');
+    mediaDiv.className = 'feed-media';
+
+    if (hasMedia) {
+      if (post.type === 'video') {
+        const video = document.createElement('video');
+        video.src = post.file;
+        video.controls = true;
+        video.playsInline = true;
+        mediaDiv.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = post.file;
+        img.alt = post.caption || 'Post image';
+        mediaDiv.appendChild(img);
+      }
+    }
+
+    // Content
+    const content = document.createElement('div');
+    content.className = 'feed-content';
+
+    const caption = document.createElement('p');
+    caption.className = 'feed-caption';
+    caption.textContent = post.caption || '';
+
+    const btn = document.createElement('a');
+    btn.className = 'feed-telegram-btn';
+    btn.href = post.telegramLink || 'https://t.me/Memevores';
+    btn.target = '_blank';
+    btn.rel = 'noopener';
+    btn.textContent = 'View on Telegram';
+
+    content.appendChild(caption);
+    content.appendChild(btn);
+
+    card.appendChild(mediaDiv);
+    card.appendChild(content);
+    grid.appendChild(card);
+  });
+}
+
 // ===== Init =====
 (async function init() {
   try {
-    const [settings, content, promotions] = await Promise.all([
+    const [settings, content, promotions, posts] = await Promise.all([
       loadJSON('data/settings.json'),
       loadJSON('data/content.json'),
-      loadJSON('data/promotions.json')
+      loadJSON('data/promotions.json'),
+      loadJSON('data/posts.json')
     ]);
 
     renderPromotionBanner(promotions);
@@ -249,8 +308,8 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
     renderYouTubePromo(promotions);
     renderCTA(content);
     renderFooter(settings);
+    renderFeed(posts);
 
-    // Setup close handlers for both modals
     setupModalClose('donate-modal', 'donate-close', '.modal-backdrop');
     setupModalClose('support-modal', 'support-close', '.modal-backdrop');
   } catch (err) {
