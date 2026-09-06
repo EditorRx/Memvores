@@ -291,6 +291,120 @@ function renderFeed(posts) {
   });
 }
 
+// ===== Category Modal =====
+function normalizeCategory(cat) {
+  if (!cat) return 'other';
+  const c = String(cat).toLowerCase();
+  if (['clips', 'audio', 'templates', 'tutorials'].includes(c)) return c;
+  return 'other';
+}
+
+function renderCategoryPosts(posts, category, query) {
+  const grid = $('#category-posts-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const q = (query || '').toLowerCase().trim();
+
+  const filtered = posts.filter(post => {
+    const cat = normalizeCategory(post.category);
+    const matchesCategory = cat === category;
+    const text = (post.caption || '').toLowerCase();
+    const matchesQuery = !q || text.includes(q);
+    return matchesCategory && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.color = 'var(--muted)';
+    empty.style.gridColumn = '1 / -1';
+    empty.style.padding = '2rem';
+    empty.style.textAlign = 'center';
+    empty.textContent = 'No posts in this category yet.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(post => {
+    const card = document.createElement('div');
+    card.className = 'feed-card';
+
+    const hasMedia = !!post.file;
+    if (!hasMedia) {
+      card.classList.add('text-only');
+    }
+
+    const mediaDiv = document.createElement('div');
+    mediaDiv.className = 'feed-media';
+
+    if (hasMedia) {
+      if (post.type === 'video') {
+        const video = document.createElement('video');
+        video.src = post.file;
+        video.controls = true;
+        video.playsInline = true;
+        mediaDiv.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = post.file;
+        img.alt = post.caption || 'Post image';
+        mediaDiv.appendChild(img);
+      }
+    }
+
+    const content = document.createElement('div');
+    content.className = 'feed-content';
+
+    const caption = document.createElement('p');
+    caption.className = 'feed-caption';
+    caption.textContent = post.caption || '';
+
+    const btn = document.createElement('a');
+    btn.className = 'feed-telegram-btn';
+    btn.href = post.telegramLink || 'https://t.me/Memevores';
+    btn.target = '_blank';
+    btn.rel = 'noopener';
+    btn.textContent = 'View on Telegram';
+
+    content.appendChild(caption);
+    content.appendChild(btn);
+
+    card.appendChild(mediaDiv);
+    card.appendChild(content);
+    grid.appendChild(card);
+  });
+}
+
+function openCategoryModal(posts, category) {
+  const modal = document.getElementById('category-modal');
+  const title = document.getElementById('category-modal-title');
+  const searchInput = document.getElementById('category-search');
+  if (!modal || !title || !searchInput) return;
+
+  const label = category.charAt(0).toUpperCase() + category.slice(1);
+  title.textContent = `Browse • ${label}`;
+
+  searchInput.value = '';
+  renderCategoryPosts(posts, category, '');
+
+  modal.classList.remove('hidden');
+
+  const onClose = () => {
+    modal.classList.add('hidden');
+    searchInput.removeEventListener('input', onSearch);
+    modal.querySelector('.modal-backdrop')?.removeEventListener('click', onClose);
+    document.getElementById('category-close')?.removeEventListener('click', onClose);
+  };
+
+  const onSearch = () => {
+    renderCategoryPosts(posts, category, searchInput.value);
+  };
+
+  searchInput.addEventListener('input', onSearch);
+  modal.querySelector('.modal-backdrop')?.addEventListener('click', onClose);
+  document.getElementById('category-close')?.addEventListener('click', onClose);
+}
+
 // ===== Init =====
 (async function init() {
   try {
@@ -312,6 +426,16 @@ function renderFeed(posts) {
 
     setupModalClose('donate-modal', 'donate-close', '.modal-backdrop');
     setupModalClose('support-modal', 'support-close', '.modal-backdrop');
+    setupModalClose('category-modal', 'category-close', '.modal-backdrop');
+
+    // Category boxes
+    const categoryCards = $$('.category-card');
+    categoryCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const category = card.dataset.category;
+        openCategoryModal(posts, category);
+      });
+    });
   } catch (err) {
     console.error('Error loading MEMEVORES data:', err);
     document.body.insertAdjacentHTML(
