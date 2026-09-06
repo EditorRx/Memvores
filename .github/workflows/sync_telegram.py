@@ -28,28 +28,6 @@ def call_tg(method, params=None, data=None, files=None):
         return resp.json()
 
 
-def get_channel_id():
-    # Resolve channel username to chat ID
-    resp = call_tg("getChat", {"chat_id": "@" + CHANNEL_USERNAME})
-    chat = resp.get("result", {})
-    chat_id = chat.get("id")
-    if not chat_id:
-        raise RuntimeError("Could not resolve channel ID")
-    return chat_id
-
-
-def fetch_recent_messages(chat_id, limit=100):
-    # Get recent messages; we'll filter for media/text
-    resp = call_tg("getChatHistory", {
-        "chat_id": chat_id,
-        "limit": limit,
-        "reverse": False
-    })
-    messages = resp.get("result", [])
-    # If getChatHistory is not available, we'll fallback to getUpdates approach later.
-    return messages
-
-
 def download_file(file_id, file_path: Path):
     info = call_tg("getFile", {"file_id": file_id})
     file_info = info.get("result", {})
@@ -68,9 +46,7 @@ def download_file(file_id, file_path: Path):
 
 
 def get_media_from_message(msg):
-    # Return (type, file_id, file_size) if media exists
     if "photo" in msg:
-        # photos are sent as sizes; take the largest
         photos = msg["photo"]
         if not photos:
             return None
@@ -83,7 +59,6 @@ def get_media_from_message(msg):
 
     if "document" in msg:
         d = msg["document"]
-        # Only consider video/document if mime type is video
         mime = d.get("mime_type", "")
         if mime.startswith("video/"):
             return "video", d["file_id"], d.get("file_size", 0)
@@ -92,24 +67,28 @@ def get_media_from_message(msg):
 
 
 def main():
-    chat_id = get_channel_id()
-
-    # For now, use getUpdates as a simple fallback if getChatHistory is not available
-    # We'll fetch last ~100 updates and filter messages from our channel
-    offset = None  # not tracking offset in this simple version
-    limit = 100
+    # Fetch recent updates
     resp = call_tg("getUpdates", {
-        "offset": offset,
-        "limit": limit,
+        "offset": -1,
+        "limit": 100,
         "timeout": 10
     })
     updates = resp.get("result", [])
 
     messages = []
     for u in updates:
+        # Channel posts come in "channel_post"
         if "channel_post" in u:
             msg = u["channel_post"]
-            if msg.get("chat", {}).get("username") == CHANNEL_USERNAME:
+            chat = msg.get("chat", {})
+            # Match by channel username or by chat.id if needed
+            if chat.get("username") == CHANNEL_USERNAME:
+                messages.append(msg)
+        # Also handle normal group posts if you ever test in a group
+        if "message" in u:
+            msg = u["message"]
+            chat = msg.get("chat", {})
+            if chat.get("username") == CHANNEL_USERNAME:
                 messages.append(msg)
 
     # Sort by message_id ascending
@@ -150,15 +129,13 @@ def main():
         if media_info:
             mtype, file_id, file_size = media_info
             if file_size > max_file_size_bytes:
-                # Skip large files
+                # Skip large files but still record the post
                 posts.append(post_entry)
                 continue
 
             post_entry["type"] = mtype
 
-            # Generate stable filename
             ext = ".jpg" if mtype == "photo" else ".mp4"
-            safe_caption = (caption[:20] if caption else "post").replace("/", "-").replace("\\", "-")
             hash_part = hashlib.sha256(f"{post_id}-{file_id}".encode()).hexdigest()[:8]
             filename = f"{date_str[:19].replace(':', '-')}-{post_id}-{hash_part}{ext}"
             file_path = POSTS_DIR / filename
@@ -176,18 +153,15 @@ def main():
     # Determine which posts get media stored
     media_posts_with_file = [p for p in posts if "file" in p]
     if len(media_posts_with_file) > MAX_MEDIA_POSTS:
-        # Keep only latest MAX_MEDIA_POSTS with files
         to_keep = media_posts_with_file[:MAX_MEDIA_POSTS]
         to_remove = media_posts_with_file[MAX_MEDIA_POSTS:]
 
         keep_files = {p["file"] for p in to_keep}
 
-        # Remove file field from older posts
         for p in to_remove:
             if "file" in p:
                 del p["file"]
 
-        # Delete old files from disk
         for f in POSTS_DIR.iterdir():
             rel = f"posts/{f.name}"
             if rel not in keep_files:
