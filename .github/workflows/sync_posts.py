@@ -66,7 +66,7 @@ def extract_category_and_caption(caption: str):
     caption = (caption or "").strip()
 
     # Correct regex: ^s*[([a-zA-Z]+)]s*
-    pattern = r"^s*[([a-zA-Z]+)]s*"
+    pattern = r"^s*$$([a-zA-Z]+)$$s*"
     match = re.match(pattern, caption)
 
     if not match:
