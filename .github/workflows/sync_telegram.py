@@ -54,6 +54,7 @@ def is_from_our_channel(message):
 
 def extract_category_and_caption(caption):
     caption = (caption or "").strip()
+
     match = re.match(r"^s*[([a-zA-Z]+)]s*", caption)
 
     if not match:
