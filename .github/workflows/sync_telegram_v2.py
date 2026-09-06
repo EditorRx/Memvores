@@ -9,8 +9,18 @@ import httpx
 
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHANNEL_USERNAME = os.environ["TELEGRAM_CHANNEL_USERNAME"].lstrip("@")
-MAX_MEDIA_POSTS = int(os.environ.get("MAX_MEDIA_POSTS", 50))
-MAX_FILE_SIZE_MB = int(os.environ.get("MAX_FILE_SIZE_MB", 30))
+
+def _int_env(name, default: int) -> int:
+    value = os.environ.get(name, "")
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+MAX_MEDIA_POSTS = _int_env("MAX_MEDIA_POSTS", 50)
+MAX_FILE_SIZE_MB = _int_env("MAX_FILE_SIZE_MB", 30)
 
 BASE_DIR = Path(".")
 POSTS_DIR = BASE_DIR / "posts"
