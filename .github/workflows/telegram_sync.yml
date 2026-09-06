@@ -30,9 +30,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_USERNAME: ${{ secrets.TELEGRAM_CHANNEL_USERNAME }}
-          MAX_MEDIA_POSTS: ${{ vars.MAX_MEDIA_POSTS }}
-          MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
-        run: python .github/workflows/sync_telegram_v2.py
+        run: python .github/workflows/sync_posts.py
 
       - name: Commit and push posts
         run: |
