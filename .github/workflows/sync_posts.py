@@ -61,10 +61,11 @@ def is_from_our_channel(message):
         or sender_chat.get("username", "").lower() == CHANNEL_USERNAME.lower()
     )
 
-    def extract_category_and_caption(caption: str):
+
+def extract_category_and_caption(caption: str):
     caption = (caption or "").strip()
 
-    pattern = r"^s*$$([a-zA-Z]+)$$s*"
+    pattern = r"^s*[([a-zA-Z]+)]s*"
     match = re.match(pattern, caption)
 
     if not match:
@@ -75,7 +76,7 @@ def is_from_our_channel(message):
     return CATEGORY_TAGS.get(tag, "other"), clean_caption
 
 
-  def get_media_from_message(message):
+def get_media_from_message(message):
     if message.get("photo"):
         photo = max(message["photo"], key=lambda item: item.get("file_size", 0))
         return "photo", photo["file_id"], photo.get("file_size", 0), ".jpg"
