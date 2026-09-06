@@ -273,7 +273,6 @@ function renderFeed(posts) {
     mediaDiv.appendChild(img);
   }
     }
-
     // Content
     const content = document.createElement('div');
     content.className = 'feed-content';
