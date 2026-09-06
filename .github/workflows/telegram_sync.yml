@@ -30,7 +30,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_USERNAME: ${{ secrets.TELEGRAM_CHANNEL_USERNAME }}
-        run: python .github/workflows/sync_posts.py
+        run: python .github/workflows/sync_v3.py
 
       - name: Commit and push posts
         run: |
