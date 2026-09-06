@@ -253,18 +253,25 @@ function renderFeed(posts) {
     mediaDiv.className = 'feed-media';
 
     if (hasMedia) {
-      if (post.type === 'video') {
-        const video = document.createElement('video');
-        video.src = post.file;
-        video.controls = true;
-        video.playsInline = true;
-        mediaDiv.appendChild(video);
-      } else {
-        const img = document.createElement('img');
-        img.src = post.file;
-        img.alt = post.caption || 'Post image';
-        mediaDiv.appendChild(img);
-      }
+  const type = (post.type || '').toLowerCase();
+
+  if (type === 'video') {
+    const video = document.createElement('video');
+    video.src = post.file;
+    video.controls = true;
+    video.playsInline = true;
+    mediaDiv.appendChild(video);
+  } else if (type === 'audio') {
+    const audio = document.createElement('audio');
+    audio.src = post.file;
+    audio.controls = true;
+    mediaDiv.appendChild(audio);
+  } else {
+    const img = document.createElement('img');
+    img.src = post.file;
+    img.alt = post.caption || 'Post image';
+    mediaDiv.appendChild(img);
+  }
     }
 
     // Content
