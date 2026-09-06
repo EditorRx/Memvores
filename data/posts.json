@@ -1,5 +1,13 @@
 [
   {
+    "id": "8",
+    "date": "2026-09-06T10:47:32Z",
+    "type": "photo",
+    "caption": "Test post for site sync",
+    "telegramLink": "https://t.me/Memevores/8",
+    "file": "posts/2026-09-06T10-47-32-8-18af5635.jpg"
+  },
+  {
     "id": "7",
     "date": "2026-09-06T10:36:27Z",
     "type": "photo",
