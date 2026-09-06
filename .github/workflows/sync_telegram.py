@@ -66,6 +66,16 @@ def get_media_from_message(msg):
     return None
 
 
+def is_from_our_channel(msg):
+    chat = msg.get("chat", {})
+    sender_chat = msg.get("sender_chat", {})
+
+    chat_user = chat.get("username", "")
+    sender_user = sender_chat.get("username", "")
+
+    return chat_user == CHANNEL_USERNAME or sender_user == CHANNEL_USERNAME
+
+
 def main():
     # Fetch recent updates
     resp = call_tg("getUpdates", {
@@ -77,18 +87,16 @@ def main():
 
     messages = []
     for u in updates:
-        # Channel posts come in "channel_post"
+        # Channel posts
         if "channel_post" in u:
             msg = u["channel_post"]
-            chat = msg.get("chat", {})
-            # Match by channel username or by chat.id if needed
-            if chat.get("username") == CHANNEL_USERNAME:
+            if is_from_our_channel(msg):
                 messages.append(msg)
-        # Also handle normal group posts if you ever test in a group
+
+        # Also handle normal messages (in case you test in a group)
         if "message" in u:
             msg = u["message"]
-            chat = msg.get("chat", {})
-            if chat.get("username") == CHANNEL_USERNAME:
+            if is_from_our_channel(msg):
                 messages.append(msg)
 
     # Sort by message_id ascending
@@ -129,7 +137,6 @@ def main():
         if media_info:
             mtype, file_id, file_size = media_info
             if file_size > max_file_size_bytes:
-                # Skip large files but still record the post
                 posts.append(post_entry)
                 continue
 
