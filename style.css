@@ -572,3 +572,101 @@ a {
   font-weight: 400;
   margin-bottom: 14px;
 }
+
+/* ===== Feed Section ===== */
+.feed-section {
+  padding: 50px 0;
+}
+
+.feed-section h2 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #fff;
+  text-align: center;
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 600px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .feed-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.feed-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.feed-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124, 92, 255, 0.5);
+}
+
+.feed-media {
+  width: 100%;
+  background: #000;
+  display: block;
+}
+
+.feed-media img,
+.feed-media video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.feed-content {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.feed-caption {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.feed-telegram-btn {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.feed-telegram-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.feed-card.text-only .feed-media {
+  display: none;
+}
