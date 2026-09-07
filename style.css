@@ -770,7 +770,6 @@ a {
   font-weight: 600;
 }
 
-/* Scroll-in reveal */
 .scroll-reveal {
   opacity: 0;
   transform: translateY(42px);
@@ -789,7 +788,6 @@ a {
   transform: translateY(0);
 }
 
-/* Keep the site accessible if the user has reduced-motion enabled */
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,
   .scroll-reveal.from-top,
