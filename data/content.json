@@ -47,8 +47,8 @@
     {
       "id": "how-it-works",
       "title": "How it works",
-      "content": "1. I post clips, audio, templates and tutorials on my Telegram channel. 2. A workflow automatically saves the captions and details to this site. 3. On the website, you only see the caption, media type (audio, video, template, tutorial) and a link to view or download on Telegram. 4. The actual media files stay on Telegram – nothing is hosted directly on this site."
-    }
+      "content": "Whenever media is uploaded to the Telegram channel, it is automatically detected and listed here, so users can easily browse and find the clips, audio, templates, and other content they need."
+    },
   ],
   "cta": {
     "title": "Ready to dive in?",
