@@ -244,13 +244,14 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
   });
 }
 
-// ===== Render Feed (Latest from Memevores) =====
+// ===== Render Feed (Latest from Memevores) - ONLY 4 LATEST =====
 function renderFeed(posts) {
   const grid = $('#feed-grid');
   if (!grid) return;
   grid.innerHTML = '';
 
-  (posts || []).forEach(post => {
+  // Show only 4 latest posts
+  (posts || []).slice(0, 4).forEach(post => {
     const card = document.createElement('div');
     card.className = 'feed-card';
 
