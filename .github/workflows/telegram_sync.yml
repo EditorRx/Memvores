@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "*/10 * * * *"
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
