@@ -458,3 +458,31 @@ function openCategoryModal(posts, category) {
     );
   }
 })();
+function setupScrollReveal() {
+  const items = document.querySelectorAll(
+    ".post-card:not([data-reveal-ready]), .feature-card:not([data-reveal-ready]), .section-card:not([data-reveal-ready]), .promotion-card:not([data-reveal-ready])"
+  );
+
+  items.forEach((item) => {
+    item.dataset.revealReady = "true";
+    item.classList.add("reveal");
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+        } else {
+          entry.target.classList.remove("is-visible");
+        }
+      });
+    },
+    {
+      threshold: 0.12,
+      rootMargin: "0px 0px -50px 0px"
+    }
+  );
+
+  items.forEach((item) => observer.observe(item));
+}
