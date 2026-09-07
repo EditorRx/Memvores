@@ -1,93 +1,234 @@
-import os
-import asyncio
-from telethon import TelegramClient
-from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
+import hashlib
 import json
+import os
 import re
+from datetime import datetime, timezone
+from pathlib import Path
 
-bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
-channel_username = os.environ["TELEGRAM_CHANNEL_USERNAME"]
+import httpx
 
-client = TelegramClient('memvores_sync_bot', bot_token=bot_token)
+BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+CHANNEL_USERNAME = os.environ["TELEGRAM_CHANNEL_USERNAME"].lstrip("@")
+MAX_MEDIA_POSTS = int(os.environ.get("MAX_MEDIA_POSTS", 50))
+MAX_FILE_SIZE_MB = int(os.environ.get("MAX_FILE_SIZE_MB", 30))
 
-POSTS_FILE = "data/posts.json"
+BASE_DIR = Path(".")
+POSTS_DIR = BASE_DIR / "posts"
+POSTS_JSON = BASE_DIR / "data" / "posts.json"
+POSTS_DIR.mkdir(exist_ok=True)
 
-def get_message_type(message):
-    if message.media is None:
-        return "text"
-    if isinstance(message.media, MessageMediaPhoto):
-        return "photo"
-    if isinstance(message.media, MessageMediaDocument):
-        mime = getattr(message.media, 'mime_type', '') or ''
-        if mime.startswith('video/'):
-            return "video"
-        if mime.startswith('audio/'):
-            return "audio"
-        return "video"
-    return "photo"
+TG_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
-def decide_category_from_caption(caption: str) -> str:
-    caption = caption or ""
-    if re.search(r"\b#clips\b", caption, flags=re.IGNORECASE):
-        return "clips"
-    if re.search(r"\b#audio\b", caption, flags=re.IGNORECASE):
-        return "audio"
-    if re.search(r"\b#templates\b", caption, flags=re.IGNORECASE):
-        return "templates"
-    if re.search(r"\b#tutorials\b", caption, flags=re.IGNORECASE):
-        return "tutorials"
-    return "other"
+CATEGORY_TAGS = {
+    "clip": "clips",
+    "clips": "clips",
+    "audio": "audio",
+    "sound": "audio",
+    "template": "templates",
+    "templates": "templates",
+    "overlay": "templates",
+    "tutorial": "tutorials",
+    "tutorials": "tutorials",
+    "update": "tutorials"
+}
+
+
+def call_tg(method, params=None):
+    with httpx.Client(timeout=60.0) as client:
+        response = client.post(f"{TG_API}/{method}", params=params or {})
+        response.raise_for_status()
+        data = response.json()
+
+    if not data.get("ok"):
+        raise RuntimeError(f"Telegram {method} failed: {data}")
+
+    return data["result"]
+
+
+def is_from_our_channel(message):
+    chat = message.get("chat", {})
+    sender_chat = message.get("sender_chat", {})
+    return (
+        chat.get("username", "").lower() == CHANNEL_USERNAME.lower()
+        or sender_chat.get("username", "").lower() == CHANNEL_USERNAME.lower()
+    )
+
+
+def extract_category_and_caption(caption):
+    caption = (caption or "").strip()
+
+    # First check for hashtag format: #tutorials, #clips, #audio, #templates
+    hashtag_match = re.search(r"#(clips|audio|templates|tutorials)\b", caption, flags=re.IGNORECASE)
+    if hashtag_match:
+        tag = hashtag_match.group(1).lower()
+        clean_caption = re.sub(r"s*#\b(clips|audio|templates|tutorials)\b", "", caption, flags=re.IGNORECASE).strip()
+        return tag, clean_caption
+
+    # Fallback to [tag] format
+    match = re.match(r"^s*[([a-zA-Z]+)]s*", caption)
+    if not match:
+        return "other", caption
+
+    tag = match.group(1).lower()
+    clean_caption = caption[match.end():].strip()
+    return CATEGORY_TAGS.get(tag, "other"), clean_caption
+
+
+def get_media_from_message(message):
+    if message.get("photo"):
+        photo = max(message["photo"], key=lambda item: item.get("file_size", 0))
+        return "photo", photo["file_id"], photo.get("file_size", 0), ".jpg"
+
+    if message.get("video"):
+        video = message["video"]
+        return "video", video["file_id"], video.get("file_size", 0), ".mp4"
+
+    if message.get("audio"):
+        audio = message["audio"]
+        mime = audio.get("mime_type", "")
+        extension = ".mp3" if "mpeg" in mime or "mp3" in mime else ".m4a"
+        return "audio", audio["file_id"], audio.get("file_size", 0), extension
+
+    if message.get("voice"):
+        voice = message["voice"]
+        return "audio", voice["file_id"], voice.get("file_size", 0), ".ogg"
+
+    if message.get("document"):
+        document = message["document"]
+        mime = document.get("mime_type", "").lower()
+
+        if mime.startswith("video/"):
+            return "video", document["file_id"], document.get("file_size", 0), ".mp4"
+
+        if mime.startswith("audio/"):
+            extension = Path(document.get("file_name", "")).suffix or ".mp3"
+            return "audio", document["file_id"], document.get("file_size", 0), extension
+
+        if mime.startswith("image/"):
+            extension = Path(document.get("file_name", "")).suffix or ".jpg"
+            return "photo", document["file_id"], document.get("file_size", 0), extension
+
+    return None
+
+
+def download_file(file_id, destination):
+    file_info = call_tg("getFile", {"file_id": file_id})
+    telegram_path = file_info.get("file_path")
+
+    if not telegram_path:
+        raise RuntimeError("Telegram returned no file path.")
+
+    url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{telegram_path}"
+
+    with httpx.Client(timeout=120.0, follow_redirects=True) as client:
+        with client.stream("GET", url) as response:
+            response.raise_for_status()
+            with open(destination, "wb") as output:
+                for chunk in response.iter_bytes(chunk_size=8192):
+                    output.write(chunk)
+
 
 def load_posts():
-    if not os.path.exists(POSTS_FILE):
+    if not POSTS_JSON.exists():
         return []
-    with open(POSTS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+
+    with open(POSTS_JSON, "r", encoding="utf-8") as file:
+        return json.load(file)
+
 
 def save_posts(posts):
-    with open(POSTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(posts, f, indent=2, ensure_ascii=False)
+    POSTS_JSON.parent.mkdir(exist_ok=True)
 
-async def sync_channel():
-    await client.start()
-    channel = await client.get_entity(channel_username)
+    with open(POSTS_JSON, "w", encoding="utf-8") as file:
+        json.dump(posts, file, ensure_ascii=False, indent=2)
+
+
+def cleanup_old_media(posts):
+    media_posts = [post for post in posts if post.get("file")]
+    keep_posts = media_posts[:MAX_MEDIA_POSTS]
+    keep_files = {post["file"] for post in keep_posts}
+
+    for post in media_posts[MAX_MEDIA_POSTS:]:
+        post.pop("file", None)
+
+    for local_file in POSTS_DIR.iterdir():
+        if local_file.is_file() and f"posts/{local_file.name}" not in keep_files:
+            local_file.unlink()
+
+
+def main():
+    updates = call_tg(
+        "getUpdates",
+        {
+            "offset": -1,
+            "limit": 100,
+            "timeout": 10,
+            "allowed_updates": json.dumps(["channel_post"])
+        }
+    )
+
+    messages = []
+
+    for update in updates:
+        message = update.get("channel_post")
+        if message and is_from_our_channel(message):
+            messages.append(message)
+
+    messages.sort(key=lambda message: message["message_id"])
 
     posts = load_posts()
-    existing_ids = {p.get("id") for p in posts}
+    existing_ids = {str(post["id"]) for post in posts}
 
-    new_posts = []
+    for message in messages:
+        message_id = str(message["message_id"])
 
-    async for message in client.iter_messages(channel, limit=50):
-        if message.id in existing_ids:
+        if message_id in existing_ids:
             continue
 
-        caption = message.text or ""
-        post_type = get_message_type(message)
+        raw_caption = message.get("caption", "") or message.get("text", "")
+        category, caption = extract_category_and_caption(raw_caption)
 
-        file_path = None
-        if message.media:
-            if isinstance(message.media, MessageMediaPhoto):
-                file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-photo.jpg")
-            elif isinstance(message.media, MessageMediaDocument):
-                file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-file")
+        timestamp = datetime.fromtimestamp(
+            message["date"], tz=timezone.utc
+        ).isoformat().replace("+00:00", "Z")
 
-        telegram_link = f"https://t.me/{channel_username}/{message.id}"
-        category = decide_category_from_caption(caption)
-
-        post_entry = {
-            "id": str(message.id),
-            "date": message.date.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "type": post_type,
+        post = {
+            "id": message_id,
+            "date": timestamp,
+            "type": "text",
             "category": category,
             "caption": caption,
-            "telegramLink": telegram_link,
-            "file": file_path.replace("\\", "/") if file_path else None
+            "telegramLink": f"https://t.me/{CHANNEL_USERNAME}/{message_id}"
         }
 
-        new_posts.append(post_entry)
+        media = get_media_from_message(message)
 
-    posts.extend(new_posts)
+        if media:
+            media_type, file_id, file_size, extension = media
+            post["type"] = media_type
+
+            if file_size <= MAX_FILE_SIZE_BYTES:
+                hash_part = hashlib.sha256(
+                    f"{message_id}-{file_id}".encode("utf-8")
+                ).hexdigest()[:8]
+
+                filename = (
+                    f"{timestamp[:19].replace(':', '-')}-"
+                    f"{message_id}-{hash_part}{extension}"
+                )
+
+                destination = POSTS_DIR / filename
+                download_file(file_id, destination)
+                post["file"] = f"posts/{filename}"
+
+        posts.append(post)
+        existing_ids.add(message_id)
+
+    posts.sort(key=lambda post: post["date"], reverse=True)
+    cleanup_old_media(posts)
     save_posts(posts)
-    print(f"Synced {len(new_posts)} new posts. Total posts: {len(posts)}")
 
-asyncio.run(sync_channel())
+
+if __name__ == "__main__":
+    main()
