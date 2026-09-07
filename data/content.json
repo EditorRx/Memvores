@@ -44,6 +44,12 @@
       "title": "About Memevores",
       "content": "MEMEVORES is a creator hub for meme clips, sounds, templates, and edit assets. Everything is organized to help you find and use content quickly in your own videos and edits."
     },
+    {
+      "id": "how-it-works",
+      "title": "How it works",
+      "content": "1. I post clips, audio, templates and tutorials on my Telegram channel. 2. A workflow automatically saves the captions and details to this site. 3. On the website, you only see the caption, media type (audio, video, template, tutorial) and a link to view or download on Telegram. 4. The actual media files stay on Telegram – nothing is hosted directly on this site."
+    }
+  ],
   "cta": {
     "title": "Ready to dive in?",
     "description": "Join the Telegram channel to get clips, sounds, templates, and chaos straight to your feed.",
