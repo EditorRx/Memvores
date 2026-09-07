@@ -1,4 +1,11 @@
 // ===== Helpers =====
+function cleanCaption(text) {
+  if (!text) return '';
+  // Remove hashtags like #clips, #audio, #templates, #tutorials, #other
+  return text
+    .replace(/s*#\b(clips|audio|templates|tutorials|other)\b/gi, '')
+    .trim();
+}
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -274,7 +281,7 @@ function renderFeed(posts) {
 
     const caption = document.createElement('p');
     caption.className = 'feed-caption';
-    caption.textContent = post.caption || '';
+    caption.textContent = cleanCaption(post.caption || '');
 
     const btn = document.createElement('a');
     btn.className = 'feed-telegram-btn';
@@ -359,7 +366,7 @@ function renderCategoryPosts(posts, category, query) {
 
     const caption = document.createElement('p');
     caption.className = 'feed-caption';
-    caption.textContent = post.caption || '';
+    caption.textContent = cleanCaption(post.caption || '');
 
     const btn = document.createElement('a');
     btn.className = 'feed-telegram-btn';
