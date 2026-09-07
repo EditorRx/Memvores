@@ -18,26 +18,88 @@ function setHref(id, href) {
   if (el) el.href = href;
 }
 
-// Remove hashtags like #clips, #audio, #templates, #tutorials, #other from caption
+// Remove category hashtags from captions
 function cleanCaption(text) {
   if (!text) return '';
+
   return text
     .replace(/s*#\b(clips|audio|templates|tutorials|other)\b/gi, '')
     .trim();
 }
+
+// ===== Scroll Reveal =====
+let lastScrollPosition = window.scrollY;
+let revealObserver;
+
+function setupScrollReveal() {
+  const items = document.querySelectorAll(
+    '.feature-card:not([data-reveal-bound]), ' +
+    '.category-card:not([data-reveal-bound]), ' +
+    '.feed-card:not([data-reveal-bound]), ' +
+    '#about-section:not([data-reveal-bound]), ' +
+    '#how-section:not([data-reveal-bound]), ' +
+    '#youtube-promo:not([data-reveal-bound]), ' +
+    '#cta-section:not([data-reveal-bound])'
+  );
+
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver(
+      (entries) => {
+        const scrollingDown = window.scrollY >= lastScrollPosition;
+
+        entries.forEach((entry) => {
+          const element = entry.target;
+
+          if (entry.isIntersecting) {
+            // Down scroll: element comes upward from below.
+            // Up scroll: element comes downward from above.
+            element.classList.toggle('from-top', !scrollingDown);
+
+            requestAnimationFrame(() => {
+              element.classList.add('show');
+            });
+          } else {
+            element.classList.remove('show');
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -40px 0px'
+      }
+    );
+  }
+
+  items.forEach((element) => {
+    element.dataset.revealBound = 'true';
+    element.classList.add('scroll-reveal');
+    revealObserver.observe(element);
+  });
+}
+
+window.addEventListener(
+  'scroll',
+  () => {
+    lastScrollPosition = window.scrollY;
+  },
+  { passive: true }
+);
 
 // ===== Render Promotion Banner =====
 function renderPromotionBanner(promotions) {
   const banner = $('#promotion-banner');
   if (!banner) return;
 
-  const active = (promotions?.promotions || []).find(p => p.enabled);
+  const active = (promotions?.promotions || []).find((p) => p.enabled);
+
   if (!active) {
     banner.classList.add('hidden');
     return;
   }
 
   banner.classList.remove('hidden');
+  banner.innerHTML = '';
+
   const inner = document.createElement('div');
   inner.className = 'container promo-inner';
 
@@ -60,24 +122,34 @@ function renderPromotionBanner(promotions) {
 // ===== Render Hero =====
 function renderHero(content, settings) {
   const hero = content?.hero || {};
+
   setText('#hero-title', hero.title || 'MEMEVORES');
   setText('#hero-subtitle', hero.subtitle || '');
   setText('#hero-description', hero.description || '');
 
   const btns = $('#hero-buttons');
-  if (btns) btns.innerHTML = '';
 
-  (hero.buttons || []).forEach(btnData => {
-    const a = document.createElement('a');
-    a.className = `btn ${btnData.style === 'primary' ? 'btn-primary' : 'btn-secondary'} btn-lg`;
-    a.href = btnData.link || '#';
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = btnData.label || 'Button';
-    btns.appendChild(a);
-  });
+  if (btns) {
+    btns.innerHTML = '';
+
+    (hero.buttons || []).forEach((btnData) => {
+      const a = document.createElement('a');
+
+      a.className = `btn ${
+        btnData.style === 'primary' ? 'btn-primary' : 'btn-secondary'
+      } btn-lg`;
+
+      a.href = btnData.link || '#';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = btnData.label || 'Button';
+
+      btns.appendChild(a);
+    });
+  }
 
   const headerBtn = $('#telegram-header-btn');
+
   if (headerBtn) {
     headerBtn.href = settings?.links?.telegram || '#';
   }
@@ -87,66 +159,73 @@ function renderHero(content, settings) {
 function renderFeatures(content) {
   const grid = $('#features-grid');
   if (!grid) return;
+
   grid.innerHTML = '';
 
-  (content?.features || []).forEach(f => {
+  (content?.features || []).forEach((feature) => {
     const card = document.createElement('div');
     card.className = 'feature-card';
 
     const icon = document.createElement('div');
     icon.className = 'feature-icon';
-    icon.textContent = f.icon || '';
+    icon.textContent = feature.icon || '';
 
     const title = document.createElement('div');
     title.className = 'feature-title';
-    title.textContent = f.title || '';
+    title.textContent = feature.title || '';
 
-    const desc = document.createElement('div');
-    desc.className = 'feature-desc';
-    desc.textContent = f.description || '';
+    const description = document.createElement('div');
+    description.className = 'feature-desc';
+    description.textContent = feature.description || '';
 
     card.appendChild(icon);
     card.appendChild(title);
-    card.appendChild(desc);
+    card.appendChild(description);
+
     grid.appendChild(card);
   });
 }
 
 // ===== Render Content Sections =====
 function renderContentSections(content) {
-  const aboutSection = content?.sections?.find(s => s.id === 'about');
-  const howSection = content?.sections?.find(s => s.id === 'how-it-works');
-
-  const aboutText = aboutSection?.content || '';
-  const howText = howSection?.content || '';
+  const aboutSection = content?.sections?.find((section) => section.id === 'about');
+  const howSection = content?.sections?.find(
+    (section) => section.id === 'how-it-works'
+  );
 
   setText('#about-title', aboutSection?.title || 'About');
   setText('#how-title', howSection?.title || 'How it works');
 
-  setText('#about-text', aboutText);
-  setText('#how-text', howText);
+  setText('#about-text', aboutSection?.content || '');
+  setText('#how-text', howSection?.content || '');
 }
 
 // ===== Render YouTube Promo Card =====
 function renderYouTubePromo(promotions) {
   const cardContainer = $('#youtube-promo-card');
-  if (!cardContainer) return;
+  const promoSection = $('#youtube-promo');
 
-  const promo = (promotions?.promotions || []).find(p => p.enabled && p.style === 'youtube');
+  if (!cardContainer || !promoSection) return;
+
+  const promo = (promotions?.promotions || []).find(
+    (promotion) => promotion.enabled && promotion.style === 'youtube'
+  );
+
   if (!promo) {
-    $('#youtube-promo').classList.add('hidden');
+    promoSection.classList.add('hidden');
     return;
   }
 
+  promoSection.classList.remove('hidden');
   cardContainer.innerHTML = '';
 
   const title = document.createElement('div');
   title.className = 'promo-card-title';
-  title.textContent = promo.title;
+  title.textContent = promo.title || '';
 
-  const desc = document.createElement('div');
-  desc.className = 'promo-card-desc';
-  desc.textContent = promo.description || '';
+  const description = document.createElement('div');
+  description.className = 'promo-card-desc';
+  description.textContent = promo.description || '';
 
   const btn = document.createElement('a');
   btn.className = 'promo-card-btn';
@@ -156,17 +235,19 @@ function renderYouTubePromo(promotions) {
   btn.textContent = promo.buttonText || 'Visit Channel';
 
   cardContainer.appendChild(title);
-  cardContainer.appendChild(desc);
+  cardContainer.appendChild(description);
   cardContainer.appendChild(btn);
 }
 
 // ===== Render CTA =====
 function renderCTA(content) {
   const cta = content?.cta || {};
+
   setText('#cta-title', cta.title || '');
   setText('#cta-description', cta.description || '');
 
   const btn = $('#cta-button');
+
   if (btn) {
     btn.textContent = cta.button?.label || 'Join Telegram';
     btn.href = cta.button?.link || '#';
@@ -187,85 +268,111 @@ function renderFooter(settings) {
   setText('#footer-tagline', settings?.brand?.tagline || '');
 
   const socialContainer = $('#social-buttons');
+
   if (socialContainer) {
     socialContainer.innerHTML = '';
-    socials.forEach(s => {
+
+    socials.forEach((social) => {
       const a = document.createElement('a');
-      a.className = `social-btn ${s.enabled ? '' : 'disabled'}`;
-      a.href = s.enabled ? (s.url || '#') : '#';
-      a.target = s.enabled ? '_blank' : undefined;
-      a.rel = 'noopener';
-      a.innerHTML = `<i class="${s.icon || ''}"></i> <span>${s.name || ''}</span>`;
+
+      a.className = `social-btn ${social.enabled ? '' : 'disabled'}`;
+      a.href = social.enabled ? social.url || '#' : '#';
+
+      if (social.enabled) {
+        a.target = '_blank';
+        a.rel = 'noopener';
+      }
+
+      a.innerHTML = `<i class="${social.icon || ''}"></i> <span>${
+        social.name || ''
+      }</span>`;
+
       socialContainer.appendChild(a);
     });
   }
 
   const yearEl = $('#year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Donate buttons (header + footer) → open Donate modal
-  $$('a[href="#donate"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = document.getElementById('donate-modal');
-      if (modal) modal.classList.remove('hidden');
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
+  }
+
+  // Donate buttons → open Donate modal
+  $$('a[href="#donate"]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      const modal = $('#donate-modal');
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
     });
   });
 
-  // Support buttons (header + footer) → open Support modal
-  $$('a[href="#support"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = document.getElementById('support-modal');
-      if (modal) modal.classList.remove('hidden');
+  // Support buttons → open Support modal
+  $$('a[href="#support"]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      const modal = $('#support-modal');
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
     });
   });
 
-  // Set MV Admin link inside Support modal
-  const mvAdminBtn = document.getElementById('support-mv-admin');
+  const mvAdminBtn = $('#support-mv-admin');
+
   if (mvAdminBtn) {
     mvAdminBtn.href = links.support || '#';
   }
 }
 
-// ===== Modals: close handlers =====
+// ===== Modal Close Handlers =====
 function setupModalClose(modalId, closeBtnId, backdropSelector) {
   const modal = document.getElementById(modalId);
+
   if (!modal) return;
 
   const closeBtn = document.getElementById(closeBtnId);
+
   closeBtn?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
 
   const backdrop = modal.querySelector(backdropSelector);
+
   backdrop?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
 }
 
-// ===== Render Feed (Latest from Memevores) - ONLY 4 LATEST =====
+// ===== Render Feed: Latest 4 Posts =====
 function renderFeed(posts) {
   const grid = $('#feed-grid');
+
   if (!grid) return;
+
   grid.innerHTML = '';
 
-  // Show only 4 latest posts
-  (posts || []).slice(0, 4).forEach(post => {
+  (posts || []).slice(0, 4).forEach((post) => {
     const card = document.createElement('div');
     card.className = 'feed-card';
 
-    const hasMedia = !!post.file;
+    const hasMedia = Boolean(post.file);
+
     if (!hasMedia) {
       card.classList.add('text-only');
     }
 
-    // Media container – only type label, no actual media
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'feed-media';
 
     if (hasMedia) {
       const type = (post.type || '').toLowerCase();
+
       const typeLabel =
         {
           video: 'Video',
@@ -277,10 +384,10 @@ function renderFeed(posts) {
       const label = document.createElement('div');
       label.className = 'media-type-label';
       label.textContent = typeLabel;
+
       mediaDiv.appendChild(label);
     }
 
-    // Content
     const content = document.createElement('div');
     content.className = 'feed-content';
 
@@ -300,49 +407,63 @@ function renderFeed(posts) {
 
     card.appendChild(mediaDiv);
     card.appendChild(content);
+
     grid.appendChild(card);
   });
 }
 
 // ===== Category Modal =====
-function normalizeCategory(cat) {
-  if (!cat) return 'other';
-  const c = String(cat).toLowerCase();
-  if (['clips', 'audio', 'templates', 'tutorials'].includes(c)) return c;
+function normalizeCategory(category) {
+  if (!category) return 'other';
+
+  const normalized = String(category).toLowerCase();
+
+  if (['clips', 'audio', 'templates', 'tutorials'].includes(normalized)) {
+    return normalized;
+  }
+
   return 'other';
 }
 
 function renderCategoryPosts(posts, category, query) {
   const grid = $('#category-posts-grid');
+
   if (!grid) return;
+
   grid.innerHTML = '';
 
-  const q = (query || '').toLowerCase().trim();
+  const normalizedQuery = (query || '').toLowerCase().trim();
 
-  const filtered = posts.filter(post => {
-    const cat = normalizeCategory(post.category);
-    const matchesCategory = cat === category;
-    const text = cleanCaption(post.caption || '').toLowerCase();
-    const matchesQuery = !q || text.includes(q);
+  const filtered = (posts || []).filter((post) => {
+    const postCategory = normalizeCategory(post.category);
+    const matchesCategory = postCategory === category;
+
+    const captionText = cleanCaption(post.caption || '').toLowerCase();
+    const matchesQuery =
+      !normalizedQuery || captionText.includes(normalizedQuery);
+
     return matchesCategory && matchesQuery;
   });
 
   if (filtered.length === 0) {
     const empty = document.createElement('div');
+
     empty.style.color = 'var(--muted)';
     empty.style.gridColumn = '1 / -1';
     empty.style.padding = '2rem';
     empty.style.textAlign = 'center';
     empty.textContent = 'No posts in this category yet.';
+
     grid.appendChild(empty);
     return;
   }
 
-  filtered.forEach(post => {
+  filtered.forEach((post) => {
     const card = document.createElement('div');
     card.className = 'feed-card';
 
-    const hasMedia = !!post.file;
+    const hasMedia = Boolean(post.file);
+
     if (!hasMedia) {
       card.classList.add('text-only');
     }
@@ -352,6 +473,7 @@ function renderCategoryPosts(posts, category, query) {
 
     if (hasMedia) {
       const type = (post.type || '').toLowerCase();
+
       const typeLabel =
         {
           video: 'Video',
@@ -363,6 +485,7 @@ function renderCategoryPosts(posts, category, query) {
       const label = document.createElement('div');
       label.className = 'media-type-label';
       label.textContent = typeLabel;
+
       mediaDiv.appendChild(label);
     }
 
@@ -385,38 +508,53 @@ function renderCategoryPosts(posts, category, query) {
 
     card.appendChild(mediaDiv);
     card.appendChild(content);
+
     grid.appendChild(card);
   });
+
+  // Animate category-modal cards created dynamically.
+  setupScrollReveal();
 }
 
 function openCategoryModal(posts, category) {
-  const modal = document.getElementById('category-modal');
-  const title = document.getElementById('category-modal-title');
-  const searchInput = document.getElementById('category-search');
+  const modal = $('#category-modal');
+  const title = $('#category-modal-title');
+  const searchInput = $('#category-search');
+
   if (!modal || !title || !searchInput) return;
 
   const label = category.charAt(0).toUpperCase() + category.slice(1);
-  title.textContent = `Browse • ${label}`;
 
+  title.textContent = `Browse • ${label}`;
   searchInput.value = '';
+
   renderCategoryPosts(posts, category, '');
 
   modal.classList.remove('hidden');
-
-  const onClose = () => {
-    modal.classList.add('hidden');
-    searchInput.removeEventListener('input', onSearch);
-    modal.querySelector('.modal-backdrop')?.removeEventListener('click', onClose);
-    document.getElementById('category-close')?.removeEventListener('click', onClose);
-  };
 
   const onSearch = () => {
     renderCategoryPosts(posts, category, searchInput.value);
   };
 
+  const onClose = () => {
+    modal.classList.add('hidden');
+
+    searchInput.removeEventListener('input', onSearch);
+    modal.querySelector('.modal-backdrop')?.removeEventListener(
+      'click',
+      onClose
+    );
+    $('#category-close')?.removeEventListener('click', onClose);
+  };
+
   searchInput.addEventListener('input', onSearch);
-  modal.querySelector('.modal-backdrop')?.addEventListener('click', onClose);
-  document.getElementById('category-close')?.addEventListener('click', onClose);
+
+  modal.querySelector('.modal-backdrop')?.addEventListener(
+    'click',
+    onClose
+  );
+
+  $('#category-close')?.addEventListener('click', onClose);
 }
 
 // ===== Init =====
@@ -442,47 +580,26 @@ function openCategoryModal(posts, category) {
     setupModalClose('support-modal', 'support-close', '.modal-backdrop');
     setupModalClose('category-modal', 'category-close', '.modal-backdrop');
 
-    // Category boxes
     const categoryCards = $$('.category-card');
-    categoryCards.forEach(card => {
+
+    categoryCards.forEach((card) => {
       card.addEventListener('click', () => {
         const category = card.dataset.category;
-        openCategoryModal(posts, category);
+
+        if (category) {
+          openCategoryModal(posts, category);
+        }
       });
     });
+
+    // Cards are now present in the DOM, so bind animations.
+    setupScrollReveal();
   } catch (err) {
     console.error('Error loading MEMEVORES data:', err);
+
     document.body.insertAdjacentHTML(
       'beforeend',
       '<div style="padding:20px;color:#ffb3b3;text-align:center;">Failed to load site data. Check data/*.json files.</div>'
     );
   }
 })();
-function setupScrollReveal() {
-  const items = document.querySelectorAll(
-    ".post-card:not([data-reveal-ready]), .feature-card:not([data-reveal-ready]), .section-card:not([data-reveal-ready]), .promotion-card:not([data-reveal-ready])"
-  );
-
-  items.forEach((item) => {
-    item.dataset.revealReady = "true";
-    item.classList.add("reveal");
-  });
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-        } else {
-          entry.target.classList.remove("is-visible");
-        }
-      });
-    },
-    {
-      threshold: 0.12,
-      rootMargin: "0px 0px -50px 0px"
-    }
-  );
-
-  items.forEach((item) => observer.observe(item));
-}
