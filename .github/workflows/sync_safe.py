@@ -4,12 +4,11 @@ from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
 import json
 import re
 
-api_id = int(os.environ["TELEGRAM_API_ID"])
-api_hash = os.environ["TELEGRAM_API_HASH"]
 bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
 channel_username = os.environ["TELEGRAM_CHANNEL_USERNAME"]
 
-client = TelegramClient('memvores_sync', api_id, api_hash, bot_token=bot_token)
+# Bot-only client (no api_id/api_hash needed)
+client = TelegramClient('memvores_sync_bot', bot_token=bot_token)
 
 POSTS_FILE = "data/posts.json"
 
@@ -19,15 +18,12 @@ def get_message_type(message):
     if isinstance(message.media, MessageMediaPhoto):
         return "photo"
     if isinstance(message.media, MessageMediaDocument):
-        # Could be video, audio, template, etc.
         mime = getattr(message.media, 'mime_type', '') or ''
         if mime.startswith('video/'):
             return "video"
         if mime.startswith('audio/'):
             return "audio"
-        # Default for templates / other files
         return "video"
-    # Fallback
     return "photo"
 
 def decide_category_from_caption(caption: str) -> str:
