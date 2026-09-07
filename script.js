@@ -233,7 +233,7 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
   });
 }
 
-// ===== Render Feed =====
+// ===== Render Feed (Latest from Memevores) =====
 function renderFeed(posts) {
   const grid = $('#feed-grid');
   if (!grid) return;
@@ -248,31 +248,26 @@ function renderFeed(posts) {
       card.classList.add('text-only');
     }
 
-    // Media container
+    // Media container – now only shows a type label, no actual media
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'feed-media';
 
     if (hasMedia) {
-  const type = (post.type || '').toLowerCase();
+      const type = (post.type || '').toLowerCase();
+      const typeLabel =
+        {
+          video: 'Video',
+          audio: 'Audio',
+          photo: 'Image',
+          text: 'Text'
+        }[type] || 'Media';
 
-  if (type === 'video') {
-    const video = document.createElement('video');
-    video.src = post.file;
-    video.controls = true;
-    video.playsInline = true;
-    mediaDiv.appendChild(video);
-  } else if (type === 'audio') {
-    const audio = document.createElement('audio');
-    audio.src = post.file;
-    audio.controls = true;
-    mediaDiv.appendChild(audio);
-  } else {
-    const img = document.createElement('img');
-    img.src = post.file;
-    img.alt = post.caption || 'Post image';
-    mediaDiv.appendChild(img);
-  }
+      const label = document.createElement('div');
+      label.className = 'media-type-label';
+      label.textContent = typeLabel;
+      mediaDiv.appendChild(label);
     }
+
     // Content
     const content = document.createElement('div');
     content.className = 'feed-content';
@@ -344,18 +339,19 @@ function renderCategoryPosts(posts, category, query) {
     mediaDiv.className = 'feed-media';
 
     if (hasMedia) {
-      if (post.type === 'video') {
-        const video = document.createElement('video');
-        video.src = post.file;
-        video.controls = true;
-        video.playsInline = true;
-        mediaDiv.appendChild(video);
-      } else {
-        const img = document.createElement('img');
-        img.src = post.file;
-        img.alt = post.caption || 'Post image';
-        mediaDiv.appendChild(img);
-      }
+      const type = (post.type || '').toLowerCase();
+      const typeLabel =
+        {
+          video: 'Video',
+          audio: 'Audio',
+          photo: 'Image',
+          text: 'Text'
+        }[type] || 'Media';
+
+      const label = document.createElement('div');
+      label.className = 'media-type-label';
+      label.textContent = typeLabel;
+      mediaDiv.appendChild(label);
     }
 
     const content = document.createElement('div');
