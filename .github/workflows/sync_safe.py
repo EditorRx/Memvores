@@ -2,7 +2,7 @@ import os
 import asyncio
 from datetime import datetime
 from telethon import TelegramClient
-from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument, MessageMediaVideo, MessageMediaAudio, MessageMediaVoice
+from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument, MessageMediaAudio, MessageMediaVoice
 import json
 import re
 
@@ -20,8 +20,15 @@ def get_message_type(message):
         return "text"
     if isinstance(message.media, MessageMediaPhoto):
         return "photo"
-    if isinstance(message.media, (MessageMediaVideo, MessageMediaDocument)):
-        # Agar document hai to mime type check kar sakte ho, abhi simple: video
+    if isinstance(message.media, MessageMediaDocument):
+        # Document can be video, template, or other file
+        # For simplicity, treat as video if mime type starts with video/
+        mime = getattr(message.media, 'mime_type', '') or ''
+        if mime.startswith('video/'):
+            return "video"
+        if mime.startswith('audio/'):
+            return "audio"
+        # Default for templates / other files
         return "video"
     if isinstance(message.media, (MessageMediaAudio, MessageMediaVoice)):
         return "audio"
@@ -70,10 +77,8 @@ async def sync_channel():
         if message.media:
             if isinstance(message.media, MessageMediaPhoto):
                 file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-photo.jpg")
-            elif isinstance(message.media, MessageMediaVideo):
-                file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-video.mp4")
             elif isinstance(message.media, MessageMediaDocument):
-                # Templates / other files
+                # Could be video, template, audio, etc.
                 file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-file")
             elif isinstance(message.media, (MessageMediaAudio, MessageMediaVoice)):
                 file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-audio.mp3")
