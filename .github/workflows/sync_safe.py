@@ -8,7 +8,7 @@ import re
 bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
 channel_username = os.environ["TELEGRAM_CHANNEL_USERNAME"]
 
-client = TelegramClient('session_name', bot_token=bot_token)
+client = TelegramClient('memvores_sync_bot', bot_token=bot_token)
 
 POSTS_FILE = "data/posts.json"
 
