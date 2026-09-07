@@ -1,4 +1,5 @@
 import os
+import asyncio
 from telethon import TelegramClient
 from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
 import json
@@ -7,8 +8,7 @@ import re
 bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
 channel_username = os.environ["TELEGRAM_CHANNEL_USERNAME"]
 
-# Bot-only client (no api_id/api_hash needed)
-client = TelegramClient('memvores_sync_bot', bot_token=bot_token)
+client = TelegramClient('session_name', bot_token=bot_token)
 
 POSTS_FILE = "data/posts.json"
 
@@ -88,8 +88,6 @@ async def sync_channel():
 
     posts.extend(new_posts)
     save_posts(posts)
-
     print(f"Synced {len(new_posts)} new posts. Total posts: {len(posts)}")
 
-with client:
-    client.run_until_complete(sync_channel())
+asyncio.run(sync_channel())
