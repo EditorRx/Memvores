@@ -759,3 +759,13 @@ a {
   max-width: 100%;
   height: auto;
 }
+
+.media-type-label {
+  background: #1f1f2a;
+  color: #cfcfe6;
+  border: 1px solid #262633;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
