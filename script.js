@@ -1,11 +1,4 @@
 // ===== Helpers =====
-function cleanCaption(text) {
-  if (!text) return '';
-  // Remove hashtags like #clips, #audio, #templates, #tutorials, #other
-  return text
-    .replace(/s*#\b(clips|audio|templates|tutorials|other)\b/gi, '')
-    .trim();
-}
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -23,6 +16,14 @@ function setText(id, text) {
 function setHref(id, href) {
   const el = $(id);
   if (el) el.href = href;
+}
+
+// Remove hashtags like #clips, #audio, #templates, #tutorials, #other from caption
+function cleanCaption(text) {
+  if (!text) return '';
+  return text
+    .replace(/s*#\b(clips|audio|templates|tutorials|other)\b/gi, '')
+    .trim();
 }
 
 // ===== Render Promotion Banner =====
@@ -113,11 +114,14 @@ function renderFeatures(content) {
 
 // ===== Render Content Sections =====
 function renderContentSections(content) {
-  const aboutText = content?.sections?.find(s => s.id === 'about')?.content || '';
-  const howText = content?.sections?.find(s => s.id === 'how-it-works')?.content || '';
+  const aboutSection = content?.sections?.find(s => s.id === 'about');
+  const howSection = content?.sections?.find(s => s.id === 'how-it-works');
 
-  setText('#about-title', content?.sections?.find(s => s.id === 'about')?.title || 'About');
-  setText('#how-title', content?.sections?.find(s => s.id === 'how-it-works')?.title || 'How it works');
+  const aboutText = aboutSection?.content || '';
+  const howText = howSection?.content || '';
+
+  setText('#about-title', aboutSection?.title || 'About');
+  setText('#how-title', howSection?.title || 'How it works');
 
   setText('#about-text', aboutText);
   setText('#how-text', howText);
@@ -255,7 +259,7 @@ function renderFeed(posts) {
       card.classList.add('text-only');
     }
 
-    // Media container – now only shows a type label, no actual media
+    // Media container – only type label, no actual media
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'feed-media';
 
@@ -317,7 +321,7 @@ function renderCategoryPosts(posts, category, query) {
   const filtered = posts.filter(post => {
     const cat = normalizeCategory(post.category);
     const matchesCategory = cat === category;
-    const text = (post.caption || '').toLowerCase();
+    const text = cleanCaption(post.caption || '').toLowerCase();
     const matchesQuery = !q || text.includes(q);
     return matchesCategory && matchesQuery;
   });
