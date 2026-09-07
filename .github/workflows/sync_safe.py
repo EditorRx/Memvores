@@ -1,8 +1,6 @@
 import os
-import asyncio
-from datetime import datetime
 from telethon import TelegramClient
-from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument, MessageMediaAudio, MessageMediaVoice
+from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
 import json
 import re
 
@@ -21,8 +19,7 @@ def get_message_type(message):
     if isinstance(message.media, MessageMediaPhoto):
         return "photo"
     if isinstance(message.media, MessageMediaDocument):
-        # Document can be video, template, or other file
-        # For simplicity, treat as video if mime type starts with video/
+        # Could be video, audio, template, etc.
         mime = getattr(message.media, 'mime_type', '') or ''
         if mime.startswith('video/'):
             return "video"
@@ -30,8 +27,7 @@ def get_message_type(message):
             return "audio"
         # Default for templates / other files
         return "video"
-    if isinstance(message.media, (MessageMediaAudio, MessageMediaVoice)):
-        return "audio"
+    # Fallback
     return "photo"
 
 def decide_category_from_caption(caption: str) -> str:
@@ -70,7 +66,6 @@ async def sync_channel():
             continue
 
         caption = message.text or ""
-
         post_type = get_message_type(message)
 
         file_path = None
@@ -78,13 +73,9 @@ async def sync_channel():
             if isinstance(message.media, MessageMediaPhoto):
                 file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-photo.jpg")
             elif isinstance(message.media, MessageMediaDocument):
-                # Could be video, template, audio, etc.
                 file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-file")
-            elif isinstance(message.media, (MessageMediaAudio, MessageMediaVoice)):
-                file_path = await message.download_media(file=f"posts/{message.date.strftime('%Y-%m-%dT%H-%M-%S')}-{message.id}-audio.mp3")
 
         telegram_link = f"https://t.me/{channel_username}/{message.id}"
-
         category = decide_category_from_caption(caption)
 
         post_entry = {
@@ -99,11 +90,10 @@ async def sync_channel():
 
         new_posts.append(post_entry)
 
-    # Naye posts ko existing ke saath merge karo
     posts.extend(new_posts)
     save_posts(posts)
 
     print(f"Synced {len(new_posts)} new posts. Total posts: {len(posts)}")
 
 with client:
-    client.loop.run_until_complete(sync_channel())
+    client.run_until_complete(sync_channel())
