@@ -56,15 +56,22 @@ def is_from_our_channel(message):
 
 
 def extract_category_and_caption(caption):
+    print(f"DEBUG: Raw caption = {repr(caption)}")
     caption = (caption or "").strip()
+    print(f"DEBUG: After strip = {repr(caption)}")
 
-    # Check for hashtag format: #tutorials, #clips, #audio, #templates
+    # Check for hashtag format
     hashtag_match = re.search(r"#(clips|audio|templates|tutorials)\b", caption, flags=re.IGNORECASE)
+    print(f"DEBUG: Hashtag match = {hashtag_match}")
+    
     if hashtag_match:
         tag = hashtag_match.group(1).lower()
-        # Remove the hashtag from caption
         clean_caption = re.sub(r"s*#" + tag + r"\b", "", caption, flags=re.IGNORECASE).strip()
+        print(f"DEBUG: Found tag = {tag}, clean_caption = {repr(clean_caption)}")
         return tag, clean_caption
+
+    print(f"DEBUG: No match, returning other")
+    return "other", caption
 
     # No hashtag found
     return "other", caption
