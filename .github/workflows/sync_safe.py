@@ -163,7 +163,7 @@ def main():
     updates = call_tg(
         "getUpdates",
         {
-            "offset": -1,
+            "offset": 0,
             "limit": 100,
             "timeout": 10,
             "allowed_updates": json.dumps(["channel_post"])
@@ -230,7 +230,6 @@ def main():
     posts.sort(key=lambda post: post["date"], reverse=True)
     cleanup_old_media(posts)
     save_posts(posts)
-
 
 if __name__ == "__main__":
     main()
