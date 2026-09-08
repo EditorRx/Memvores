@@ -412,7 +412,14 @@ function renderFeed(posts) {
   });
 }
 
-// ===== Category Modal =====
+// ===== Category Modal with Pagination =====
+const ITEMS_PER_PAGE = 9;
+const MAX_VISIBLE_PAGES = 4;
+
+let currentCategory = null;
+let currentPage = 1;
+let filteredCategoryItems = [];
+
 function normalizeCategory(category) {
   if (!category) return 'other';
 
@@ -427,14 +434,14 @@ function normalizeCategory(category) {
 
 function renderCategoryPosts(posts, category, query) {
   const grid = $('#category-posts-grid');
-
   if (!grid) return;
 
   grid.innerHTML = '';
 
   const normalizedQuery = (query || '').toLowerCase().trim();
 
-  const filtered = (posts || []).filter((post) => {
+  // Filter by category and search query
+  filteredCategoryItems = (posts || []).filter((post) => {
     const postCategory = normalizeCategory(post.category);
     const matchesCategory = postCategory === category;
 
@@ -445,75 +452,114 @@ function renderCategoryPosts(posts, category, query) {
     return matchesCategory && matchesQuery;
   });
 
-  if (filtered.length === 0) {
-    const empty = document.createElement('div');
+  // Reset to first page on every search
+  currentPage = 1;
 
-    empty.style.color = 'var(--muted)';
+  const totalPages = Math.max(1, Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const pageItems = filteredCategoryItems.slice(start, end);
+
+  if (pageItems.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.color = 'var(--text-dim)';
     empty.style.gridColumn = '1 / -1';
     empty.style.padding = '2rem';
     empty.style.textAlign = 'center';
     empty.textContent = 'No posts in this category yet.';
-
     grid.appendChild(empty);
-    return;
+  } else {
+    pageItems.forEach((post) => {
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+
+      const hasMedia = Boolean(post.file);
+      if (!hasMedia) card.classList.add('text-only');
+
+      const mediaDiv = document.createElement('div');
+      mediaDiv.className = 'feed-media';
+
+      if (hasMedia) {
+        const type = (post.type || '').toLowerCase();
+        const typeLabel =
+          {
+            video: 'Video',
+            audio: 'Audio',
+            photo: 'Image',
+            text: 'Text'
+          }[type] || 'Media';
+
+        const label = document.createElement('div');
+        label.className = 'media-type-label';
+        label.textContent = typeLabel;
+        mediaDiv.appendChild(label);
+      }
+
+      const content = document.createElement('div');
+      content.className = 'feed-content';
+
+      const caption = document.createElement('p');
+      caption.className = 'feed-caption';
+      caption.textContent = cleanCaption(post.caption || '');
+
+      const btn = document.createElement('a');
+      btn.className = 'feed-telegram-btn';
+      btn.href = post.telegramLink || 'https://t.me/Memevores';
+      btn.target = '_blank';
+      btn.rel = 'noopener';
+      btn.textContent = 'View on Telegram';
+
+      content.appendChild(caption);
+      content.appendChild(btn);
+
+      card.appendChild(mediaDiv);
+      card.appendChild(content);
+      grid.appendChild(card);
+    });
   }
 
-  filtered.forEach((post) => {
-    const card = document.createElement('div');
-    card.className = 'feed-card';
-
-    const hasMedia = Boolean(post.file);
-
-    if (!hasMedia) {
-      card.classList.add('text-only');
-    }
-
-    const mediaDiv = document.createElement('div');
-    mediaDiv.className = 'feed-media';
-
-    if (hasMedia) {
-      const type = (post.type || '').toLowerCase();
-
-      const typeLabel =
-        {
-          video: 'Video',
-          audio: 'Audio',
-          photo: 'Image',
-          text: 'Text'
-        }[type] || 'Media';
-
-      const label = document.createElement('div');
-      label.className = 'media-type-label';
-      label.textContent = typeLabel;
-
-      mediaDiv.appendChild(label);
-    }
-
-    const content = document.createElement('div');
-    content.className = 'feed-content';
-
-    const caption = document.createElement('p');
-    caption.className = 'feed-caption';
-    caption.textContent = cleanCaption(post.caption || '');
-
-    const btn = document.createElement('a');
-    btn.className = 'feed-telegram-btn';
-    btn.href = post.telegramLink || 'https://t.me/Memevores';
-    btn.target = '_blank';
-    btn.rel = 'noopener';
-    btn.textContent = 'View on Telegram';
-
-    content.appendChild(caption);
-    content.appendChild(btn);
-
-    card.appendChild(mediaDiv);
-    card.appendChild(content);
-
-    grid.appendChild(card);
-  });
-
-  // Animate category-modal cards created dynamically.
+  updatePagination(totalPages);
   setupScrollReveal();
+}
+
+function updatePagination(totalPages) {
+  const prevBtn = $('#cat-prev');
+  const nextBtn = $('#cat-next');
+  const pageNumbersContainer = $('#cat-page-numbers');
+
+  if (!prevBtn || !nextBtn || !pageNumbersContainer) return;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
+
+  pageNumbersContainer.innerHTML = '';
+
+  if (totalPages <= 1) return;
+
+  // Calculate visible page range (max 4 pages)
+  let startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
+  let endPage = startPage + MAX_VISIBLE_PAGES - 1;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    btn.type = 'button';
+    btn.textContent = i;
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      // Re-render using current category and current search query
+      const searchInput = $('#category-search');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
+    });
+    pageNumbersContainer.appendChild(btn);
+  }
 }
 
 function openCategoryModal(posts, category) {
@@ -523,39 +569,60 @@ function openCategoryModal(posts, category) {
 
   if (!modal || !title || !searchInput) return;
 
-  const label = category.charAt(0).toUpperCase() + category.slice(1);
+  // Store all posts globally for pagination access
+  window.allPosts = posts;
+  currentCategory = category;
+  currentPage = 1;
 
+  const label = category.charAt(0).toUpperCase() + category.slice(1);
   title.textContent = `Browse • ${label}`;
   searchInput.value = '';
 
-  renderCategoryPosts(posts, category, '');
-
   modal.classList.remove('hidden');
 
+  // Initial render
+  renderCategoryPosts(posts, category, '');
+
+  // Search handler
   const onSearch = () => {
     renderCategoryPosts(posts, category, searchInput.value);
   };
 
+  // Close handler
   const onClose = () => {
     modal.classList.add('hidden');
-
     searchInput.removeEventListener('input', onSearch);
-    modal.querySelector('.modal-backdrop')?.removeEventListener(
-      'click',
-      onClose
-    );
+    modal.querySelector('.modal-backdrop')?.removeEventListener('click', onClose);
     $('#category-close')?.removeEventListener('click', onClose);
   };
 
   searchInput.addEventListener('input', onSearch);
-
-  modal.querySelector('.modal-backdrop')?.addEventListener(
-    'click',
-    onClose
-  );
-
+  modal.querySelector('.modal-backdrop')?.addEventListener('click', onClose);
   $('#category-close')?.addEventListener('click', onClose);
 }
+
+// Pagination button listeners (run once on init)
+document.addEventListener('DOMContentLoaded', () => {
+  const prevBtn = $('#cat-prev');
+  const nextBtn = $('#cat-next');
+
+  prevBtn?.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      const searchInput = $('#category-search');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
+    }
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    const totalPages = Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE);
+    if (currentPage < totalPages) {
+      currentPage++;
+      const searchInput = $('#category-search');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
+    }
+  });
+});
 
 // ===== Init =====
 (async function init() {
