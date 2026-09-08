@@ -179,23 +179,34 @@
   </div>
 
   <!-- Category Browse Modal -->
-  <div id="category-modal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content modal-wide">
-      <button id="category-close" class="modal-close" aria-label="Close">&times;</button>
-      <h3 id="category-modal-title">Browse</h3>
+<div id="category-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content modal-wide">
+    <button id="category-close" class="modal-close" aria-label="Close">&times;</button>
+    <h3 id="category-modal-title">Browse</h3>
 
-      <div class="filters">
-        <input
-          id="category-search"
-          type="text"
-          placeholder="Search in this category..."
-        />
-      </div>
+    <div class="filters">
+      <input
+        id="category-search"
+        type="text"
+        placeholder="Search in this category..."
+      />
+    </div>
 
-      <div id="category-posts-grid" class="feed-grid"></div>
+    <div id="category-posts-grid" class="feed-grid"></div>
+
+    <!-- Pagination -->
+    <div class="category-pagination" id="category-pagination" aria-label="Pagination">
+      <button id="cat-prev" class="btn btn-sm" type="button" disabled>
+        ← Previous
+      </button>
+      <div class="page-numbers" id="cat-page-numbers"></div>
+      <button id="cat-next" class="btn btn-sm" type="button" disabled>
+        Next →
+      </button>
     </div>
   </div>
+</div>
 
   <script src="script.js"></script>
 </body>
