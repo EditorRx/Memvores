@@ -51,8 +51,6 @@ function setupScrollReveal() {
           const element = entry.target;
 
           if (entry.isIntersecting) {
-            // Down scroll: element comes upward from below.
-            // Up scroll: element comes downward from above.
             element.classList.toggle('from-top', !scrollingDown);
 
             requestAnimationFrame(() => {
@@ -297,34 +295,23 @@ function renderFooter(settings) {
     yearEl.textContent = new Date().getFullYear();
   }
 
-  // Donate buttons → open Donate modal
   $$('a[href="#donate"]').forEach((el) => {
     el.addEventListener('click', (event) => {
       event.preventDefault();
-
       const modal = $('#donate-modal');
-
-      if (modal) {
-        modal.classList.remove('hidden');
-      }
+      if (modal) modal.classList.remove('hidden');
     });
   });
 
-  // Support buttons → open Support modal
   $$('a[href="#support"]').forEach((el) => {
     el.addEventListener('click', (event) => {
       event.preventDefault();
-
       const modal = $('#support-modal');
-
-      if (modal) {
-        modal.classList.remove('hidden');
-      }
+      if (modal) modal.classList.remove('hidden');
     });
   });
 
   const mvAdminBtn = $('#support-mv-admin');
-
   if (mvAdminBtn) {
     mvAdminBtn.href = links.support || '#';
   }
@@ -333,17 +320,14 @@ function renderFooter(settings) {
 // ===== Modal Close Handlers =====
 function setupModalClose(modalId, closeBtnId, backdropSelector) {
   const modal = document.getElementById(modalId);
-
   if (!modal) return;
 
   const closeBtn = document.getElementById(closeBtnId);
-
   closeBtn?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
 
   const backdrop = modal.querySelector(backdropSelector);
-
   backdrop?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
@@ -352,7 +336,6 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
 // ===== Render Feed: Latest 4 Posts =====
 function renderFeed(posts) {
   const grid = $('#feed-grid');
-
   if (!grid) return;
 
   grid.innerHTML = '';
@@ -362,17 +345,13 @@ function renderFeed(posts) {
     card.className = 'feed-card';
 
     const hasMedia = Boolean(post.file);
-
-    if (!hasMedia) {
-      card.classList.add('text-only');
-    }
+    if (!hasMedia) card.classList.add('text-only');
 
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'feed-media';
 
     if (hasMedia) {
       const type = (post.type || '').toLowerCase();
-
       const typeLabel =
         {
           video: 'Video',
@@ -384,7 +363,6 @@ function renderFeed(posts) {
       const label = document.createElement('div');
       label.className = 'media-type-label';
       label.textContent = typeLabel;
-
       mediaDiv.appendChild(label);
     }
 
@@ -407,7 +385,6 @@ function renderFeed(posts) {
 
     card.appendChild(mediaDiv);
     card.appendChild(content);
-
     grid.appendChild(card);
   });
 }
@@ -422,161 +399,10 @@ let filteredCategoryItems = [];
 
 function normalizeCategory(category) {
   if (!category) return 'other';
-
   const normalized = String(category).toLowerCase();
-
   if (['clips', 'audio', 'templates', 'tutorials'].includes(normalized)) {
     return normalized;
   }
-
-  return 'other';
-}
-
-function renderCategoryPosts(posts, category, query) {
-  const grid = $('#category-posts-grid');
-  if (!grid) return;
-
-  grid.innerHTML = '';
-
-  const normalizedQuery = (query || '').toLowerCase().trim();
-
-  // Filter by category and search query
-  filteredCategoryItems = (posts || []).filter((post) => {
-    const postCategory = normalizeCategory(post.category);
-    const matchesCategory = postCategory === category;
-
-    const captionText = cleanCaption(post.caption || '').toLowerCase();
-    const matchesQuery =
-      !normalizedQuery || captionText.includes(normalizedQuery);
-
-    return matchesCategory && matchesQuery;
-  });
-
-  // Reset to first page on every search
-  currentPage = 1;
-
-  const totalPages = Math.max(1, Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE));
-  if (currentPage > totalPages) currentPage = totalPages;
-
-  const start = (currentPage - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  const pageItems = filteredCategoryItems.slice(start, end);
-
-  if (pageItems.length === 0) {
-    const empty = document.createElement('div');
-    empty.style.color = 'var(--text-dim)';
-    empty.style.gridColumn = '1 / -1';
-    empty.style.padding = '2rem';
-    empty.style.textAlign = 'center';
-    empty.textContent = 'No posts in this category yet.';
-    grid.appendChild(empty);
-  } else {
-    pageItems.forEach((post) => {
-      const card = document.createElement('div');
-      card.className = 'feed-card';
-
-      const hasMedia = Boolean(post.file);
-      if (!hasMedia) card.classList.add('text-only');
-
-      const mediaDiv = document.createElement('div');
-      mediaDiv.className = 'feed-media';
-
-      if (hasMedia) {
-        const type = (post.type || '').toLowerCase();
-        const typeLabel =
-          {
-            video: 'Video',
-            audio: 'Audio',
-            photo: 'Image',
-            text: 'Text'
-          }[type] || 'Media';
-
-        const label = document.createElement('div');
-        label.className = 'media-type-label';
-        label.textContent = typeLabel;
-        mediaDiv.appendChild(label);
-      }
-
-      const content = document.createElement('div');
-      content.className = 'feed-content';
-
-      const caption = document.createElement('p');
-      caption.className = 'feed-caption';
-      caption.textContent = cleanCaption(post.caption || '');
-
-      const btn = document.createElement('a');
-      btn.className = 'feed-telegram-btn';
-      btn.href = post.telegramLink || 'https://t.me/Memevores';
-      btn.target = '_blank';
-      btn.rel = 'noopener';
-      btn.textContent = 'View on Telegram';
-
-      content.appendChild(caption);
-      content.appendChild(btn);
-
-      card.appendChild(mediaDiv);
-      card.appendChild(content);
-      grid.appendChild(card);
-    });
-  }
-
-  updatePagination(totalPages);
-  setupScrollReveal();
-}
-
-function updatePagination(totalPages) {
-  const prevBtn = $('#cat-prev');
-  const nextBtn = $('#cat-next');
-  const pageNumbersContainer = $('#cat-page-numbers');
-
-  if (!prevBtn || !nextBtn || !pageNumbersContainer) return;
-
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
-
-  pageNumbersContainer.innerHTML = '';
-
-  if (totalPages <= 1) return;
-
-  // Calculate visible page range (max 4 pages)
-  let startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
-  let endPage = startPage + MAX_VISIBLE_PAGES - 1;
-
-  if (endPage > totalPages) {
-    endPage = totalPages;
-    startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    const btn = document.createElement('button');
-    btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-    btn.type = 'button';
-    btn.textContent = i;
-    btn.addEventListener('click', () => {
-      currentPage = i;
-      // Re-render using current category and current search query
-      const searchInput = $('#category-search');
-      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
-    });
-    pageNumbersContainer.appendChild(btn);
-
-    // ===== Category Modal with Pagination =====
-const ITEMS_PER_PAGE = 9;
-const MAX_VISIBLE_PAGES = 4;
-
-let currentCategory = null;
-let currentPage = 1;
-let filteredCategoryItems = [];
-
-function normalizeCategory(category) {
-  if (!category) return 'other';
-
-  const normalized = String(category).toLowerCase();
-
-  if (['clips', 'audio', 'templates', 'tutorials'].includes(normalized)) {
-    return normalized;
-  }
-
   return 'other';
 }
 
@@ -588,7 +414,6 @@ function renderCategoryPosts(posts, category, query, isSearchChange = false) {
 
   const normalizedQuery = (query || '').toLowerCase().trim();
 
-  // Filter by category and search query
   filteredCategoryItems = (posts || []).filter((post) => {
     const postCategory = normalizeCategory(post.category);
     const matchesCategory = postCategory === category;
@@ -600,7 +425,6 @@ function renderCategoryPosts(posts, category, query, isSearchChange = false) {
     return matchesCategory && matchesQuery;
   });
 
-  // Only reset page on search change, not on pagination clicks
   if (isSearchChange) {
     currentPage = 1;
   }
@@ -688,7 +512,6 @@ function updatePagination(totalPages) {
 
   if (totalPages <= 1) return;
 
-  // Calculate visible page range (max 4 pages)
   let startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
   let endPage = startPage + MAX_VISIBLE_PAGES - 1;
 
@@ -718,7 +541,6 @@ function openCategoryModal(posts, category) {
 
   if (!modal || !title || !searchInput) return;
 
-  // Store all posts globally for pagination access
   window.allPosts = posts;
   currentCategory = category;
   currentPage = 1;
@@ -729,15 +551,12 @@ function openCategoryModal(posts, category) {
 
   modal.classList.remove('hidden');
 
-  // Initial render (search change = true)
   renderCategoryPosts(posts, category, '', true);
 
-  // Search handler
   const onSearch = () => {
     renderCategoryPosts(posts, category, searchInput.value, true);
   };
 
-  // Close handler
   const onClose = () => {
     modal.classList.add('hidden');
     searchInput.removeEventListener('input', onSearch);
@@ -750,7 +569,7 @@ function openCategoryModal(posts, category) {
   $('#category-close')?.addEventListener('click', onClose);
 }
 
-// Pagination button listeners (run once on init)
+// Pagination button listeners
 document.addEventListener('DOMContentLoaded', () => {
   const prevBtn = $('#cat-prev');
   const nextBtn = $('#cat-next');
@@ -772,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-    
+
 // ===== Init =====
 (async function init() {
   try {
@@ -797,22 +616,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModalClose('category-modal', 'category-close', '.modal-backdrop');
 
     const categoryCards = $$('.category-card');
-
     categoryCards.forEach((card) => {
       card.addEventListener('click', () => {
         const category = card.dataset.category;
-
         if (category) {
           openCategoryModal(posts, category);
         }
       });
     });
 
-    // Cards are now present in the DOM, so bind animations.
     setupScrollReveal();
   } catch (err) {
     console.error('Error loading MEMEVORES data:', err);
-
     document.body.insertAdjacentHTML(
       'beforeend',
       '<div style="padding:20px;color:#ffb3b3;text-align:center;">Failed to load site data. Check data/*.json files.</div>'
