@@ -559,6 +559,155 @@ function updatePagination(totalPages) {
       renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
     });
     pageNumbersContainer.appendChild(btn);
+
+    // ===== Category Modal with Pagination =====
+const ITEMS_PER_PAGE = 9;
+const MAX_VISIBLE_PAGES = 4;
+
+let currentCategory = null;
+let currentPage = 1;
+let filteredCategoryItems = [];
+
+function normalizeCategory(category) {
+  if (!category) return 'other';
+
+  const normalized = String(category).toLowerCase();
+
+  if (['clips', 'audio', 'templates', 'tutorials'].includes(normalized)) {
+    return normalized;
+  }
+
+  return 'other';
+}
+
+function renderCategoryPosts(posts, category, query, isSearchChange = false) {
+  const grid = $('#category-posts-grid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  const normalizedQuery = (query || '').toLowerCase().trim();
+
+  // Filter by category and search query
+  filteredCategoryItems = (posts || []).filter((post) => {
+    const postCategory = normalizeCategory(post.category);
+    const matchesCategory = postCategory === category;
+
+    const captionText = cleanCaption(post.caption || '').toLowerCase();
+    const matchesQuery =
+      !normalizedQuery || captionText.includes(normalizedQuery);
+
+    return matchesCategory && matchesQuery;
+  });
+
+  // Only reset page on search change, not on pagination clicks
+  if (isSearchChange) {
+    currentPage = 1;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const pageItems = filteredCategoryItems.slice(start, end);
+
+  if (pageItems.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.color = 'var(--text-dim)';
+    empty.style.gridColumn = '1 / -1';
+    empty.style.padding = '2rem';
+    empty.style.textAlign = 'center';
+    empty.textContent = 'No posts in this category yet.';
+    grid.appendChild(empty);
+  } else {
+    pageItems.forEach((post) => {
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+
+      const hasMedia = Boolean(post.file);
+      if (!hasMedia) card.classList.add('text-only');
+
+      const mediaDiv = document.createElement('div');
+      mediaDiv.className = 'feed-media';
+
+      if (hasMedia) {
+        const type = (post.type || '').toLowerCase();
+        const typeLabel =
+          {
+            video: 'Video',
+            audio: 'Audio',
+            photo: 'Image',
+            text: 'Text'
+          }[type] || 'Media';
+
+        const label = document.createElement('div');
+        label.className = 'media-type-label';
+        label.textContent = typeLabel;
+        mediaDiv.appendChild(label);
+      }
+
+      const content = document.createElement('div');
+      content.className = 'feed-content';
+
+      const caption = document.createElement('p');
+      caption.className = 'feed-caption';
+      caption.textContent = cleanCaption(post.caption || '');
+
+      const btn = document.createElement('a');
+      btn.className = 'feed-telegram-btn';
+      btn.href = post.telegramLink || 'https://t.me/Memevores';
+      btn.target = '_blank';
+      btn.rel = 'noopener';
+      btn.textContent = 'View on Telegram';
+
+      content.appendChild(caption);
+      content.appendChild(btn);
+
+      card.appendChild(mediaDiv);
+      card.appendChild(content);
+      grid.appendChild(card);
+    });
+  }
+
+  updatePagination(totalPages);
+  setupScrollReveal();
+}
+
+function updatePagination(totalPages) {
+  const prevBtn = $('#cat-prev');
+  const nextBtn = $('#cat-next');
+  const pageNumbersContainer = $('#cat-page-numbers');
+
+  if (!prevBtn || !nextBtn || !pageNumbersContainer) return;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
+
+  pageNumbersContainer.innerHTML = '';
+
+  if (totalPages <= 1) return;
+
+  // Calculate visible page range (max 4 pages)
+  let startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
+  let endPage = startPage + MAX_VISIBLE_PAGES - 1;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    btn.type = 'button';
+    btn.textContent = i;
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      const searchInput = $('#category-search');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '', false);
+    });
+    pageNumbersContainer.appendChild(btn);
   }
 }
 
@@ -580,12 +729,12 @@ function openCategoryModal(posts, category) {
 
   modal.classList.remove('hidden');
 
-  // Initial render
-  renderCategoryPosts(posts, category, '');
+  // Initial render (search change = true)
+  renderCategoryPosts(posts, category, '', true);
 
   // Search handler
   const onSearch = () => {
-    renderCategoryPosts(posts, category, searchInput.value);
+    renderCategoryPosts(posts, category, searchInput.value, true);
   };
 
   // Close handler
@@ -610,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage > 1) {
       currentPage--;
       const searchInput = $('#category-search');
-      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '', false);
     }
   });
 
@@ -619,11 +768,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage < totalPages) {
       currentPage++;
       const searchInput = $('#category-search');
-      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '');
+      renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '', false);
     }
   });
 });
-
+    
 // ===== Init =====
 (async function init() {
   try {
