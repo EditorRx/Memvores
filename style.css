@@ -797,3 +797,61 @@ a {
     transition: none;
   }
 }
+/* ===== Category Pagination ===== */
+.category-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-numbers .page-btn {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.page-numbers .page-btn:hover:not([disabled]) {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  background: #1a1a22;
+}
+
+.page-numbers .page-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  pointer-events: none;
+}
+
+.page-numbers .page-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Disable Previous/Next when at edges */
+.category-pagination .btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
