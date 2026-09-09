@@ -18,10 +18,8 @@ function setHref(id, href) {
   if (el) el.href = href;
 }
 
-// Remove category hashtags from captions
 function cleanCaption(text) {
   if (!text) return '';
-
   return text
     .replace(/s*#\b(clips|audio|templates|tutorials|other)\b/gi, '')
     .trim();
@@ -46,13 +44,10 @@ function setupScrollReveal() {
     revealObserver = new IntersectionObserver(
       (entries) => {
         const scrollingDown = window.scrollY >= lastScrollPosition;
-
         entries.forEach((entry) => {
           const element = entry.target;
-
           if (entry.isIntersecting) {
             element.classList.toggle('from-top', !scrollingDown);
-
             requestAnimationFrame(() => {
               element.classList.add('show');
             });
@@ -61,10 +56,7 @@ function setupScrollReveal() {
           }
         });
       },
-      {
-        threshold: 0.1,
-        rootMargin: '0px 0px -40px 0px'
-      }
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
   }
 
@@ -75,79 +67,56 @@ function setupScrollReveal() {
   });
 }
 
-window.addEventListener(
-  'scroll',
-  () => {
-    lastScrollPosition = window.scrollY;
-  },
-  { passive: true }
-);
+window.addEventListener('scroll', () => {
+  lastScrollPosition = window.scrollY;
+}, { passive: true });
 
 // ===== Render Promotion Banner =====
 function renderPromotionBanner(promotions) {
   const banner = $('#promotion-banner');
   if (!banner) return;
-
   const active = (promotions?.promotions || []).find((p) => p.enabled);
-
   if (!active) {
     banner.classList.add('hidden');
     return;
   }
-
   banner.classList.remove('hidden');
   banner.innerHTML = '';
-
   const inner = document.createElement('div');
   inner.className = 'container promo-inner';
-
   const text = document.createElement('div');
   text.className = 'promo-text';
   text.innerHTML = `<strong>Promotion:</strong> ${active.title}`;
-
   const btn = document.createElement('a');
   btn.className = 'promo-btn';
   btn.href = active.link || '#';
   btn.target = '_blank';
   btn.rel = 'noopener';
   btn.textContent = active.buttonText || 'Learn more';
-
   inner.appendChild(text);
   inner.appendChild(btn);
   banner.appendChild(inner);
 }
-
 // ===== Render Hero =====
 function renderHero(content, settings) {
   const hero = content?.hero || {};
-
   setText('#hero-title', hero.title || 'MEMEVORES');
   setText('#hero-subtitle', hero.subtitle || '');
   setText('#hero-description', hero.description || '');
-
   const btns = $('#hero-buttons');
-
   if (btns) {
     btns.innerHTML = '';
-
     (hero.buttons || []).forEach((btnData) => {
       const a = document.createElement('a');
-
-      a.className = `btn ${
-        btnData.style === 'primary' ? 'btn-primary' : 'btn-secondary'
-      } btn-lg`;
-
+      a.className = `btn ${btnData.style === 'primary' ? 'btn-primary' : 'btn-secondary'} btn-lg`;
       a.href = btnData.link || '#';
       a.target = '_blank';
       a.rel = 'noopener';
       a.textContent = btnData.label || 'Button';
-
       btns.appendChild(a);
     });
   }
-
   const headerBtn = $('#telegram-header-btn');
-
   if (headerBtn) {
     headerBtn.href = settings?.links?.telegram || '#';
   }
@@ -157,81 +126,60 @@ function renderHero(content, settings) {
 function renderFeatures(content) {
   const grid = $('#features-grid');
   if (!grid) return;
-
   grid.innerHTML = '';
-
   (content?.features || []).forEach((feature) => {
     const card = document.createElement('div');
     card.className = 'feature-card';
-
     const icon = document.createElement('div');
     icon.className = 'feature-icon';
     icon.textContent = feature.icon || '';
-
     const title = document.createElement('div');
     title.className = 'feature-title';
     title.textContent = feature.title || '';
-
     const description = document.createElement('div');
     description.className = 'feature-desc';
     description.textContent = feature.description || '';
-
     card.appendChild(icon);
     card.appendChild(title);
     card.appendChild(description);
-
     grid.appendChild(card);
   });
 }
-
 // ===== Render Content Sections =====
 function renderContentSections(content) {
   const aboutSection = content?.sections?.find((section) => section.id === 'about');
-  const howSection = content?.sections?.find(
-    (section) => section.id === 'how-it-works'
-  );
-
+  const howSection = content?.sections?.find((section) => section.id === 'how-it-works');
   setText('#about-title', aboutSection?.title || 'About');
   setText('#how-title', howSection?.title || 'How it works');
-
   setText('#about-text', aboutSection?.content || '');
   setText('#how-text', howSection?.content || '');
 }
-
 // ===== Render YouTube Promo Card =====
 function renderYouTubePromo(promotions) {
   const cardContainer = $('#youtube-promo-card');
   const promoSection = $('#youtube-promo');
-
   if (!cardContainer || !promoSection) return;
-
   const promo = (promotions?.promotions || []).find(
     (promotion) => promotion.enabled && promotion.style === 'youtube'
   );
-
   if (!promo) {
     promoSection.classList.add('hidden');
     return;
   }
-
   promoSection.classList.remove('hidden');
   cardContainer.innerHTML = '';
-
   const title = document.createElement('div');
   title.className = 'promo-card-title';
   title.textContent = promo.title || '';
-
   const description = document.createElement('div');
   description.className = 'promo-card-desc';
   description.textContent = promo.description || '';
-
   const btn = document.createElement('a');
   btn.className = 'promo-card-btn';
   btn.href = promo.link || '#';
   btn.target = '_blank';
   btn.rel = 'noopener';
   btn.textContent = promo.buttonText || 'Visit Channel';
-
   cardContainer.appendChild(title);
   cardContainer.appendChild(description);
   cardContainer.appendChild(btn);
@@ -240,12 +188,9 @@ function renderYouTubePromo(promotions) {
 // ===== Render CTA =====
 function renderCTA(content) {
   const cta = content?.cta || {};
-
   setText('#cta-title', cta.title || '');
   setText('#cta-description', cta.description || '');
-
   const btn = $('#cta-button');
-
   if (btn) {
     btn.textContent = cta.button?.label || 'Join Telegram';
     btn.href = cta.button?.link || '#';
@@ -256,45 +201,31 @@ function renderCTA(content) {
 function renderFooter(settings) {
   const links = settings?.links || {};
   const socials = settings?.socials || [];
-
   setHref('#footer-telegram', links.telegram || '#');
   setHref('#footer-youtube', links.youtube || '#');
   setHref('#footer-collab', links.collab || '#');
-
   setText('#logo-text', settings?.brand?.name || 'MEMEVORES');
   setText('#footer-logo', settings?.brand?.name || 'MEMEVORES');
   setText('#footer-tagline', settings?.brand?.tagline || '');
-
   const socialContainer = $('#social-buttons');
-
   if (socialContainer) {
     socialContainer.innerHTML = '';
-
     socials.forEach((social) => {
       const a = document.createElement('a');
-
       a.className = `social-btn ${social.enabled ? '' : 'disabled'}`;
       a.href = social.enabled ? social.url || '#' : '#';
-
       if (social.enabled) {
         a.target = '_blank';
         a.rel = 'noopener';
       }
-
-      a.innerHTML = `<i class="${social.icon || ''}"></i> <span>${
-        social.name || ''
-      }</span>`;
-
+      a.innerHTML = `<i class="${social.icon || ''}"></i> <span>${social.name || ''}</span>`;
       socialContainer.appendChild(a);
     });
   }
-
   const yearEl = $('#year');
-
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
-
   $$('a[href="#donate"]').forEach((el) => {
     el.addEventListener('click', (event) => {
       event.preventDefault();
@@ -302,7 +233,6 @@ function renderFooter(settings) {
       if (modal) modal.classList.remove('hidden');
     });
   });
-
   $$('a[href="#support"]').forEach((el) => {
     el.addEventListener('click', (event) => {
       event.preventDefault();
@@ -310,7 +240,6 @@ function renderFooter(settings) {
       if (modal) modal.classList.remove('hidden');
     });
   });
-
   const mvAdminBtn = $('#support-mv-admin');
   if (mvAdminBtn) {
     mvAdminBtn.href = links.support || '#';
@@ -321,12 +250,10 @@ function renderFooter(settings) {
 function setupModalClose(modalId, closeBtnId, backdropSelector) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
-
   const closeBtn = document.getElementById(closeBtnId);
   closeBtn?.addEventListener('click', () => {
     modal.classList.add('hidden');
   });
-
   const backdrop = modal.querySelector(backdropSelector);
   backdrop?.addEventListener('click', () => {
     modal.classList.add('hidden');
@@ -337,62 +264,43 @@ function setupModalClose(modalId, closeBtnId, backdropSelector) {
 function renderFeed(posts) {
   const grid = $('#feed-grid');
   if (!grid) return;
-
   grid.innerHTML = '';
-
   (posts || []).slice(0, 4).forEach((post) => {
     const card = document.createElement('div');
     card.className = 'feed-card';
-
     const hasMedia = Boolean(post.file);
     if (!hasMedia) card.classList.add('text-only');
-
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'feed-media';
-
     if (hasMedia) {
       const type = (post.type || '').toLowerCase();
-      const typeLabel =
-        {
-          video: 'Video',
-          audio: 'Audio',
-          photo: 'Image',
-          text: 'Text'
-        }[type] || 'Media';
-
+      const typeLabel = { video: 'Video', audio: 'Audio', photo: 'Image', text: 'Text' }[type] || 'Media';
       const label = document.createElement('div');
       label.className = 'media-type-label';
       label.textContent = typeLabel;
       mediaDiv.appendChild(label);
     }
-
     const content = document.createElement('div');
     content.className = 'feed-content';
-
     const caption = document.createElement('p');
     caption.className = 'feed-caption';
     caption.textContent = cleanCaption(post.caption || '');
-
     const btn = document.createElement('a');
     btn.className = 'feed-telegram-btn';
     btn.href = post.telegramLink || 'https://t.me/Memevores';
     btn.target = '_blank';
     btn.rel = 'noopener';
     btn.textContent = 'View on Telegram';
-
     content.appendChild(caption);
     content.appendChild(btn);
-
     card.appendChild(mediaDiv);
     card.appendChild(content);
     grid.appendChild(card);
   });
 }
-
 // ===== Category Modal with Pagination =====
 const ITEMS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 4;
-
 let currentCategory = null;
 let currentPage = 1;
 let filteredCategoryItems = [];
@@ -409,33 +317,23 @@ function normalizeCategory(category) {
 function renderCategoryPosts(posts, category, query, isSearchChange = false) {
   const grid = $('#category-posts-grid');
   if (!grid) return;
-
   grid.innerHTML = '';
-
   const normalizedQuery = (query || '').toLowerCase().trim();
-
   filteredCategoryItems = (posts || []).filter((post) => {
     const postCategory = normalizeCategory(post.category);
     const matchesCategory = postCategory === category;
-
     const captionText = cleanCaption(post.caption || '').toLowerCase();
-    const matchesQuery =
-      !normalizedQuery || captionText.includes(normalizedQuery);
-
+    const matchesQuery = !normalizedQuery || captionText.includes(normalizedQuery);
     return matchesCategory && matchesQuery;
   });
-
   if (isSearchChange) {
     currentPage = 1;
   }
-
   const totalPages = Math.max(1, Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE));
   if (currentPage > totalPages) currentPage = totalPages;
-
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE;
   const pageItems = filteredCategoryItems.slice(start, end);
-
   if (pageItems.length === 0) {
     const empty = document.createElement('div');
     empty.style.color = 'var(--text-dim)';
@@ -448,52 +346,36 @@ function renderCategoryPosts(posts, category, query, isSearchChange = false) {
     pageItems.forEach((post) => {
       const card = document.createElement('div');
       card.className = 'feed-card';
-
       const hasMedia = Boolean(post.file);
       if (!hasMedia) card.classList.add('text-only');
-
       const mediaDiv = document.createElement('div');
       mediaDiv.className = 'feed-media';
-
       if (hasMedia) {
         const type = (post.type || '').toLowerCase();
-        const typeLabel =
-          {
-            video: 'Video',
-            audio: 'Audio',
-            photo: 'Image',
-            text: 'Text'
-          }[type] || 'Media';
-
+        const typeLabel = { video: 'Video', audio: 'Audio', photo: 'Image', text: 'Text' }[type] || 'Media';
         const label = document.createElement('div');
         label.className = 'media-type-label';
         label.textContent = typeLabel;
         mediaDiv.appendChild(label);
       }
-
       const content = document.createElement('div');
       content.className = 'feed-content';
-
       const caption = document.createElement('p');
       caption.className = 'feed-caption';
       caption.textContent = cleanCaption(post.caption || '');
-
       const btn = document.createElement('a');
       btn.className = 'feed-telegram-btn';
       btn.href = post.telegramLink || 'https://t.me/Memevores';
       btn.target = '_blank';
       btn.rel = 'noopener';
       btn.textContent = 'View on Telegram';
-
       content.appendChild(caption);
       content.appendChild(btn);
-
       card.appendChild(mediaDiv);
       card.appendChild(content);
       grid.appendChild(card);
     });
   }
-
   updatePagination(totalPages);
   setupScrollReveal();
 }
@@ -502,24 +384,17 @@ function updatePagination(totalPages) {
   const prevBtn = $('#cat-prev');
   const nextBtn = $('#cat-next');
   const pageNumbersContainer = $('#cat-page-numbers');
-
   if (!prevBtn || !nextBtn || !pageNumbersContainer) return;
-
   prevBtn.disabled = currentPage === 1;
   nextBtn.disabled = currentPage === totalPages;
-
   pageNumbersContainer.innerHTML = '';
-
   if (totalPages <= 1) return;
-
   let startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
   let endPage = startPage + MAX_VISIBLE_PAGES - 1;
-
   if (endPage > totalPages) {
     endPage = totalPages;
     startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
   }
-
   for (let i = startPage; i <= endPage; i++) {
     const btn = document.createElement('button');
     btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
@@ -538,32 +413,24 @@ function openCategoryModal(posts, category) {
   const modal = $('#category-modal');
   const title = $('#category-modal-title');
   const searchInput = $('#category-search');
-
   if (!modal || !title || !searchInput) return;
-
   window.allPosts = posts;
   currentCategory = category;
   currentPage = 1;
-
   const label = category.charAt(0).toUpperCase() + category.slice(1);
   title.textContent = `Browse • ${label}`;
   searchInput.value = '';
-
   modal.classList.remove('hidden');
-
   renderCategoryPosts(posts, category, '', true);
-
   const onSearch = () => {
     renderCategoryPosts(posts, category, searchInput.value, true);
   };
-
   const onClose = () => {
     modal.classList.add('hidden');
     searchInput.removeEventListener('input', onSearch);
     modal.querySelector('.modal-backdrop')?.removeEventListener('click', onClose);
     $('#category-close')?.removeEventListener('click', onClose);
   };
-
   searchInput.addEventListener('input', onSearch);
   modal.querySelector('.modal-backdrop')?.addEventListener('click', onClose);
   $('#category-close')?.addEventListener('click', onClose);
@@ -573,7 +440,6 @@ function openCategoryModal(posts, category) {
 document.addEventListener('DOMContentLoaded', () => {
   const prevBtn = $('#cat-prev');
   const nextBtn = $('#cat-next');
-
   prevBtn?.addEventListener('click', () => {
     if (currentPage > 1) {
       currentPage--;
@@ -581,7 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCategoryPosts(window.allPosts || [], currentCategory, searchInput?.value || '', false);
     }
   });
-
   nextBtn?.addEventListener('click', () => {
     const totalPages = Math.ceil(filteredCategoryItems.length / ITEMS_PER_PAGE);
     if (currentPage < totalPages) {
@@ -601,6 +466,8 @@ document.addEventListener('DOMContentLoaded', () => {
       loadJSON('data/promotions.json'),
       loadJSON('data/posts.json')
     ]);
+
+    window.allPosts = posts;
 
     renderPromotionBanner(promotions);
     renderHero(content, settings);
@@ -633,7 +500,9 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div style="padding:20px;color:#ffb3b3;text-align:center;">Failed to load site data. Check data/*.json files.</div>'
     );
   }
-  // ===== Findy AI Assistant =====
+})();
+
+// ===== Findy AI Assistant =====
 const FINDY_API_KEY = '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';
 const FINDY_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const FINDY_MODEL = 'llama-3.1-8b-instant';
@@ -688,24 +557,19 @@ function addFindyMessage(role, text) {
   findyMessages.scrollTop = findyMessages.scrollHeight;
 }
 
-// Search posts by keywords & optional category
 function findySearchPosts(query, category = null, limit = 4) {
   const all = window.allPosts || [];
   const q = (query || '').toLowerCase().trim();
-
   const filtered = all.filter((post) => {
     const matchesQuery =
       !q ||
       (post.caption || '').toLowerCase().includes(q) ||
       (post.type || '').toLowerCase().includes(q) ||
       (post.category || '').toLowerCase().includes(q);
-
     const matchesCategory =
       !category || (post.category || '').toLowerCase() === category.toLowerCase();
-
     return matchesQuery && matchesCategory;
   });
-
   return filtered.slice(0, limit);
 }
 
@@ -721,11 +585,10 @@ async function sendFindyMessage() {
   if (!text) return;
 
   addFindyMessage('user', text);
-  findyInput.value = '';
 
+  findyInput.value = '';
   findyHistory.push({ role: 'user', content: text });
 
-  // Typing indicator
   const typing = document.createElement('div');
   typing.className = 'findy-message ai';
   typing.textContent = '...';
@@ -734,7 +597,6 @@ async function sendFindyMessage() {
   findyMessages.scrollTop = findyMessages.scrollHeight;
 
   try {
-    // Step 1: Ask Groq to interpret intent + extract keywords/category
     const intentResponse = await fetch(FINDY_API_URL, {
       method: 'POST',
       headers: {
@@ -780,20 +642,19 @@ Output ONLY valid JSON, no extra text.
     if (intent.want_media) {
       const keywords = intent.keywords || text;
       const category = intent.category || null;
-
       const results = findySearchPosts(keywords, category, 4);
 
       if (results.length === 0) {
         aiText = 'Even I can’t find what doesn’t exist. Try different keywords.';
       } else {
-        const summaries = results.map(formatPostSummary).join('
-');
-        aiText = `Got ${results.length} that slap harder than your excuses:
-
-${summaries}`;
+        const summaries = results.map(formatPostSummary).join('\n');
+        aiText =
+          'Got ' +
+          results.length +
+          ' that slap harder than your excuses:\n\n' +
+          summaries;
       }
     } else {
-      // Pure chat: let Groq reply with personality
       const chatResponse = await fetch(FINDY_API_URL, {
         method: 'POST',
         headers: {
@@ -812,7 +673,9 @@ ${summaries}`;
       });
 
       const chatData = await chatResponse.json();
-      aiText = chatData.choices?.[0]?.message?.content || 'My circuits are judging your life choices.';
+      aiText =
+        chatData.choices?.[0]?.message?.content ||
+        'My circuits are judging your life choices.';
     }
 
     typing.remove();
@@ -831,4 +694,3 @@ findySend.addEventListener('click', sendFindyMessage);
 findyInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendFindyMessage();
 });
-})();
