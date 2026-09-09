@@ -633,4 +633,202 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div style="padding:20px;color:#ffb3b3;text-align:center;">Failed to load site data. Check data/*.json files.</div>'
     );
   }
+  // ===== Findy AI Assistant =====
+const FINDY_API_KEY = window.SITE_CONFIG?.GROQ_API_KEY || 'YOUR_GROQ_API_KEY';
+const FINDY_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const FINDY_MODEL = 'llama-3.1-8b-instant';
+
+const findyTrigger = document.getElementById('findy-trigger');
+const findyChat = document.getElementById('findy-chat');
+const findyClose = document.getElementById('findy-close');
+const findyInput = document.getElementById('findy-input');
+const findySend = document.getElementById('findy-send');
+const findyMessages = document.getElementById('findy-messages');
+
+let findyOpen = false;
+let findyHistory = [];
+
+const FINDY_SYSTEM_PROMPT = `
+You are Findy, an AI assistant by Memevores.
+Personality: cool, futuristic, savage (8/10), meme-aware, understanding, helpful.
+You help users find meme clips, audios, templates, and tutorials.
+You can be roasting but never mean-spirited.
+Keep answers short, punchy, and meme-fluent.
+If the user asks for media, respond with:
+- A one-line savage/cool reply
+- Then list 2–4 relevant items as:
+  "[TYPE] – short description"
+Use the user's language style (Hindi/English mix if they do).
+`;
+
+function openFindy() {
+  findyOpen = true;
+  findyChat.classList.remove('hidden');
+  if (findyMessages.children.length === 0) {
+    addFindyMessage('ai', 'I’m Findy. I find your chaos. Tell me what you need.');
+  }
+  setTimeout(() => findyInput.focus(), 50);
+}
+
+function closeFindy() {
+  findyOpen = false;
+  findyChat.classList.add('hidden');
+}
+
+function toggleFindy() {
+  if (findyOpen) closeFindy();
+  else openFindy();
+}
+
+function addFindyMessage(role, text) {
+  const msg = document.createElement('div');
+  msg.className = `findy-message ${role}`;
+  msg.textContent = text;
+  findyMessages.appendChild(msg);
+  findyMessages.scrollTop = findyMessages.scrollHeight;
+}
+
+// Search posts by keywords & optional category
+function findySearchPosts(query, category = null, limit = 4) {
+  const all = window.allPosts || [];
+  const q = (query || '').toLowerCase().trim();
+
+  const filtered = all.filter((post) => {
+    const matchesQuery =
+      !q ||
+      (post.caption || '').toLowerCase().includes(q) ||
+      (post.type || '').toLowerCase().includes(q) ||
+      (post.category || '').toLowerCase().includes(q);
+
+    const matchesCategory =
+      !category || (post.category || '').toLowerCase() === category.toLowerCase();
+
+    return matchesQuery && matchesCategory;
+  });
+
+  return filtered.slice(0, limit);
+}
+
+function formatPostSummary(post) {
+  const typeMap = { video: 'Clip', audio: 'Audio', photo: 'Image', text: 'Post' };
+  const type = typeMap[(post.type || 'text').toLowerCase()] || 'Post';
+  const caption = (post.caption || 'No caption').slice(0, 60);
+  return `${type} – ${caption}`;
+}
+
+async function sendFindyMessage() {
+  const text = findyInput.value.trim();
+  if (!text) return;
+
+  addFindyMessage('user', text);
+  findyInput.value = '';
+
+  findyHistory.push({ role: 'user', content: text });
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'findy-message ai';
+  typing.textContent = '...';
+  typing.id = 'findy-typing';
+  findyMessages.appendChild(typing);
+  findyMessages.scrollTop = findyMessages.scrollHeight;
+
+  try {
+    // Step 1: Ask Groq to interpret intent + extract keywords/category
+    const intentResponse = await fetch(FINDY_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FINDY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: FINDY_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `
+You are Findy's brain. Your job:
+- Read the user's message.
+- Decide if they want media (clips/audio/templates/tutorials) or just chatting.
+- If they want media, output JSON like:
+  {"want_media": true, "keywords": "funny dog", "category": "clips"}
+- If not media, output:
+  {"want_media": false}
+Categories allowed: "clips", "audio", "templates", "tutorials", "other".
+Output ONLY valid JSON, no extra text.
+`
+          },
+          { role: 'user', content: text }
+        ],
+        max_tokens: 80,
+        temperature: 0.2
+      })
+    });
+
+    const intentData = await intentResponse.json();
+    let intent = { want_media: false };
+
+    try {
+      const raw = intentData.choices?.[0]?.message?.content || '{}';
+      intent = JSON.parse(raw);
+    } catch {
+      // fallback
+    }
+
+    let aiText = '';
+
+    if (intent.want_media) {
+      const keywords = intent.keywords || text;
+      const category = intent.category || null;
+
+      const results = findySearchPosts(keywords, category, 4);
+
+      if (results.length === 0) {
+        aiText = 'Even I can’t find what doesn’t exist. Try different keywords.';
+      } else {
+        const summaries = results.map(formatPostSummary).join('
+');
+        aiText = `Got ${results.length} that slap harder than your excuses:
+
+${summaries}`;
+      }
+    } else {
+      // Pure chat: let Groq reply with personality
+      const chatResponse = await fetch(FINDY_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${FINDY_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: FINDY_MODEL,
+          messages: [
+            { role: 'system', content: FINDY_SYSTEM_PROMPT },
+            ...findyHistory
+          ],
+          max_tokens: 220,
+          temperature: 0.8
+        })
+      });
+
+      const chatData = await chatResponse.json();
+      aiText = chatData.choices?.[0]?.message?.content || 'My circuits are judging your life choices.';
+    }
+
+    typing.remove();
+    addFindyMessage('ai', aiText);
+    findyHistory.push({ role: 'assistant', content: aiText });
+  } catch (err) {
+    typing.remove();
+    addFindyMessage('ai', 'Even AI has bad days. Try again.');
+    console.error('Findy error:', err);
+  }
+}
+
+findyTrigger.addEventListener('click', toggleFindy);
+findyClose.addEventListener('click', closeFindy);
+findySend.addEventListener('click', sendFindyMessage);
+findyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendFindyMessage();
+});
 })();
