@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
   // ===== Findy AI Assistant =====
-const FINDY_API_KEY = window.SITE_CONFIG?.GROQ_API_KEY || 'YOUR_GROQ_API_KEY';
+const FINDY_API_KEY = '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';
 const FINDY_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const FINDY_MODEL = 'llama-3.1-8b-instant';
 
