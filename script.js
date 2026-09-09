@@ -627,6 +627,165 @@ Output ONLY valid JSON, no extra text.
       })
     });
 
+// ===== Findy AI Assistant =====
+const FINDY_API_KEY = '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';
+const FINDY_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const FINDY_MODEL = 'llama-3.1-8b-instant';
+
+const findyTrigger = document.getElementById('findy-trigger');
+const findyChat = document.getElementById('findy-chat');
+const findyClose = document.getElementById('findy-close');
+const findyInput = document.getElementById('findy-input');
+const findySend = document.getElementById('findy-send');
+const findyMessages = document.getElementById('findy-messages');
+
+let findyOpen = false;
+let findyHistory = [];
+
+const FINDY_SYSTEM_PROMPT = `
+You are Findy, an AI assistant by Memevores.
+Personality: cool, futuristic, savage (8/10), meme-aware, understanding, helpful.
+You help users find meme clips, audios, templates, and tutorials.
+You can roast a bit but stay friendly.
+Keep answers short, punchy, and meme-fluent.
+If the user asks for media, respond with:
+- A one-line savage/cool reply
+- Then list 2–4 relevant items as:
+  "[TYPE] – short description"
+Use the user's language style (Hindi/English mix if they do).
+`;
+
+function openFindy() {
+  findyOpen = true;
+  findyChat.classList.remove('hidden');
+  if (findyMessages.children.length === 0) {
+    addFindyMessage('ai', 'I’m Findy. I find your chaos. Tell me what you need.');
+  }
+  setTimeout(() => findyInput.focus(), 50);
+}
+
+function closeFindy() {
+  findyOpen = false;
+  findyChat.classList.add('hidden');
+}
+
+function toggleFindy() {
+  if (findyOpen) closeFindy();
+  else openFindy();
+}
+
+function addFindyMessage(role, text) {
+  const msg = document.createElement('div');
+  msg.className = `findy-message ${role}`;
+  msg.textContent = text;
+  findyMessages.appendChild(msg);
+  findyMessages.scrollTop = findyMessages.scrollHeight;
+}
+
+// Render a media card inside chat
+function addFindyMediaCard(post) {
+  const card = document.createElement('div');
+  card.className = 'findy-message ai findy-media-card';
+
+  const typeMap = { video: 'Clip', audio: 'Audio', photo: 'Image', text: 'Post' };
+  const type = typeMap[(post.type || 'text').toLowerCase()] || 'Post';
+  const caption = (post.caption || 'No caption').slice(0, 80);
+
+  let mediaHTML = '';
+  if (post.type === 'video' && post.file) {
+    mediaHTML = `<video src="${post.file}" controls preload="metadata" style="width:100%;max-height:180px;border-radius:8px;"></video>`;
+  } else if (post.type === 'audio' && post.file) {
+    mediaHTML = `<audio controls preload="metadata" style="width:100%;"><source src="${post.file}" type="audio/mpeg"></audio>`;
+  } else if (post.type === 'photo' && post.file) {
+    mediaHTML = `<img src="${post.file}" alt="Media" loading="lazy" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;">`;
+  }
+
+  card.innerHTML = `
+    ${mediaHTML}
+    <div style="margin-top:6px;font-size:12px;color:var(--text-dim);">
+      <strong>${type}</strong> – ${caption}
+    </div>
+    ${post.telegramLink ? `
+      <a href="${post.telegramLink}" target="_blank" rel="noopener"
+         style="display:inline-block;margin-top:6px;font-size:11px;color:var(--accent);text-decoration:none;">
+        Open in Telegram →
+      </a>
+    ` : ''}
+  `;
+
+  findyMessages.appendChild(card);
+  findyMessages.scrollTop = findyMessages.scrollHeight;
+}
+
+function findySearchPosts(query, category = null, limit = 4) {
+  const all = window.allPosts || [];
+  const q = (query || '').toLowerCase().trim();
+  const filtered = all.filter((post) => {
+    const matchesQuery =
+      !q ||
+      (post.caption || '').toLowerCase().includes(q) ||
+      (post.type || '').toLowerCase().includes(q) ||
+      (post.category || '').toLowerCase().includes(q);
+    const matchesCategory =
+      !category || (post.category || '').toLowerCase() === category.toLowerCase();
+    return matchesQuery && matchesCategory;
+  });
+  return filtered.slice(0, limit);
+}
+
+function formatPostSummary(post) {
+  const typeMap = { video: 'Clip', audio: 'Audio', photo: 'Image', text: 'Post' };
+  const type = typeMap[(post.type || 'text').toLowerCase()] || 'Post';
+  const caption = (post.caption || 'No caption').slice(0, 60);
+  return `${type} – ${caption}`;
+}
+
+async function sendFindyMessage() {
+  const text = findyInput.value.trim();
+  if (!text) return;
+
+  addFindyMessage('user', text);
+  findyInput.value = '';
+  findyHistory.push({ role: 'user', content: text });
+
+  const typing = document.createElement('div');
+  typing.className = 'findy-message ai';
+  typing.textContent = '...';
+  typing.id = 'findy-typing';
+  findyMessages.appendChild(typing);
+  findyMessages.scrollTop = findyMessages.scrollHeight;
+
+  try {
+    const intentResponse = await fetch(FINDY_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FINDY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: FINDY_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `
+You are Findy's brain. Your job:
+- Read the user's message.
+- Decide if they want media (clips/audio/templates/tutorials) or just chatting.
+- If they want media, output JSON like:
+  {"want_media": true, "keywords": "funny dog", "category": "clips"}
+- If not media, output:
+  {"want_media": false}
+Categories allowed: "clips", "audio", "templates", "tutorials", "other".
+Output ONLY valid JSON, no extra text.
+`
+          },
+          { role: 'user', content: text }
+        ],
+        max_tokens: 80,
+        temperature: 0.2
+      })
+    });
+
     const intentData = await intentResponse.json();
     let intent = { want_media: false };
 
@@ -637,22 +796,20 @@ Output ONLY valid JSON, no extra text.
       // fallback
     }
 
-    let aiText = '';
-
     if (intent.want_media) {
       const keywords = intent.keywords || text;
       const category = intent.category || null;
       const results = findySearchPosts(keywords, category, 4);
 
+      typing.remove();
+
       if (results.length === 0) {
-        aiText = 'Even I can’t find what doesn’t exist. Try different keywords.';
+        addFindyMessage('ai', 'Even I can’t find what doesn’t exist. Try different keywords.');
       } else {
-        const summaries = results.map(formatPostSummary).join('\n');
-        aiText =
-          'Got ' +
-          results.length +
-          ' that slap harder than your excuses:\n\n' +
-          summaries;
+        addFindyMessage('ai', `Got ${results.length} that slap harder than your excuses:`);
+        results.forEach((post) => {
+          addFindyMediaCard(post);
+        });
       }
     } else {
       const chatResponse = await fetch(FINDY_API_URL, {
@@ -673,14 +830,14 @@ Output ONLY valid JSON, no extra text.
       });
 
       const chatData = await chatResponse.json();
-      aiText =
+      typing.remove();
+      const aiText =
         chatData.choices?.[0]?.message?.content ||
         'My circuits are judging your life choices.';
+      addFindyMessage('ai', aiText);
     }
 
-    typing.remove();
-    addFindyMessage('ai', aiText);
-    findyHistory.push({ role: 'assistant', content: aiText });
+    findyHistory.push({ role: 'assistant', content: text });
   } catch (err) {
     typing.remove();
     addFindyMessage('ai', 'Even AI has bad days. Try again.');
