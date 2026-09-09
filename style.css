@@ -1443,3 +1443,13 @@ select {
     height: 32px;
   }
 }
+.findy-media-card {
+  max-width: 100%;
+  padding: 8px;
+}
+
+.findy-media-card video,
+.findy-media-card img {
+  border-radius: 8px;
+  background: #000;
+}
